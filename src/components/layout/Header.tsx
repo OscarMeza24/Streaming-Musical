@@ -1,0 +1,121 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Search, Menu, User, LogOut, Settings, Crown } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
+
+interface HeaderProps {
+  onMenuToggle: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
+  const { user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Implement search functionality
+    console.log('Search:', searchQuery);
+  };
+
+  return (
+    <header className="h-16 bg-gray-900/50 backdrop-blur-lg border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between">
+      {/* Left section */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onMenuToggle}
+          className="lg:hidden"
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+        
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">SF</span>
+          </div>
+          <span className="hidden sm:block text-xl font-bold text-white">StreamFlow</span>
+        </div>
+      </div>
+
+      {/* Center section - Search */}
+      <div className="flex-1 max-w-xl mx-4">
+        <form onSubmit={handleSearch}>
+          <Input
+            type="text"
+            placeholder="Buscar canciones, artistas, álbumes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+            className="bg-gray-800/50 border-gray-700/50"
+          />
+        </form>
+      </div>
+
+      {/* Right section - User menu */}
+      <div className="relative">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowUserMenu(!showUserMenu)}
+          className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          <img
+            src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+            alt={user?.name}
+            className="w-8 h-8 rounded-full"
+          />
+          <div className="hidden sm:block text-left">
+            <p className="text-sm font-medium text-white">{user?.name}</p>
+            <p className="text-xs text-gray-400 flex items-center gap-1">
+              {user?.subscription?.type === 'free' ? (
+              'Plan Gratuito'
+              ) : (
+                <>
+                  <Crown className="w-3 h-3" />
+                  Premium
+                </>
+              )}
+            </p>
+          </div>
+        </motion.button>
+
+        {/* User dropdown menu */}
+        {showUserMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute right-0 top-full mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-50"
+          >
+            <button className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3">
+              <User className="w-4 h-4" />
+              Perfil
+            </button>
+            <button className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3">
+              <Settings className="w-4 h-4" />
+              Configuración
+            </button>
+            {user?.subscription?.type === 'free' && (
+              <button className="w-full px-4 py-2 text-left text-sm text-purple-400 hover:text-purple-300 hover:bg-gray-700 flex items-center gap-3">
+                <Crown className="w-4 h-4" />
+                Actualizar a Premium
+              </button>
+            )}
+            <hr className="my-2 border-gray-700" />
+            <button
+              onClick={logout}
+              className="w-full px-4 py-2 text-left text-sm text-red-400 hover:text-red-300 hover:bg-gray-700 flex items-center gap-3"
+            >
+              <LogOut className="w-4 h-4" />
+              Cerrar Sesión
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </header>
+  );
+};
