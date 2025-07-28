@@ -8,3 +8,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Note: In production, these would come from environment variables
 // and connect to your actual Supabase project
+
+
+
+
+

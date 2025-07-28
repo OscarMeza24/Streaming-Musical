@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LoginForm } from '../components/auth/LoginForm';
 import { RegisterForm } from '../components/auth/RegisterForm';
 
-export const AuthPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
+interface AuthPageProps {
+  mode?: 'login' | 'register';
+}
+
+export const AuthPage: React.FC<AuthPageProps> = ({ mode = 'login' }) => {
+  const [isLogin, setIsLogin] = useState(mode === 'login');
+
+  // Update isLogin state when mode prop changes
+  useEffect(() => {
+    setIsLogin(mode === 'login');
+  }, [mode]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">

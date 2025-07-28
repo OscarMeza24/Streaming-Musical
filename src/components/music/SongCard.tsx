@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Play, Pause, Heart, MoreHorizontal, Plus } from 'lucide-react';
 import { Song } from '../../types';
 import { usePlayer } from '../../contexts/PlayerContext';
-import { formatDuration, formatNumber } from '../../utils/format';
+import { formatDuration } from '../../utils/format';
 import { Button } from '../common/Button';
 
 interface SongCardProps {
@@ -25,7 +25,11 @@ export const SongCard: React.FC<SongCardProps> = ({
 
   const handlePlayClick = () => {
     if (isCurrentSong) {
-      isPlaying ? pause() : play();
+      if (isPlaying) {
+        pause();
+      } else {
+        play();
+      }
     } else {
       play(song);
     }

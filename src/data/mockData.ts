@@ -1,6 +1,22 @@
 // Mock data for development and demonstration
 import { Song, Playlist, User } from '../types';
 
+export const mockUser: User = {
+  id: '1',
+  email: 'oscar@gmail.com',
+  name: 'Oscar',
+  password: '123456',
+  createdAt: new Date().toISOString(),
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=oscar@gmail.com',
+  subscription: {
+    id: '1',
+    type: 'free',
+    startDate: new Date().toISOString(),
+    status: 'active',
+    userId: '1',
+  },
+};
+
 export const mockSongs: Song[] = [
   {
     id: '1',
@@ -14,6 +30,13 @@ export const mockSongs: Song[] = [
     coverUrl: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=400',
     plays: 1250000,
     liked: true,
+    lyrics: 'Letra de la canción...',
+    explicit: false,
+    bpm: 128,
+    albumId: 'a1',
+    trackNumber: 1,
+    addedAt: '2024-01-01T00:00:00Z',
+    isInLibrary: true,
   },
   {
     id: '2',
@@ -91,19 +114,48 @@ export const mockPlaylists: Playlist[] = [
     userId: '1',
     songs: [mockSongs[0], mockSongs[2], mockSongs[4]],
     createdAt: '2024-01-15T00:00:00Z',
+    updatedAt: '2024-07-20T10:30:00Z',
     isPublic: false,
     totalDuration: mockSongs[0].duration + mockSongs[2].duration + mockSongs[4].duration,
+    followersCount: 42,
+    isFollowing: true,
+    tags: ['favoritas', 'pop', 'electrónica'],
+    collaborative: false,
+    collaborators: [],
   },
   {
     id: '2',
     name: 'Vibras Relajantes',
     description: 'Perfecta para relajarse',
-    coverUrl: 'https://images.pexels.com/photos/761963/pexels-photo-761963.jpeg?auto=compress&cs=tinysrgb&w=400',
+    coverUrl: 'https://images.pexels.com/photos/1112080/pexels-photo-1112080.jpeg?auto=compress&cs=tinysrgb&w=400',
     userId: '1',
     songs: [mockSongs[1], mockSongs[3], mockSongs[5]],
-    createdAt: '2024-01-10T00:00:00Z',
+    createdAt: '2024-02-10T15:20:00Z',
+    updatedAt: '2024-07-22T09:15:00Z',
     isPublic: true,
     totalDuration: mockSongs[1].duration + mockSongs[3].duration + mockSongs[5].duration,
+    followersCount: 128,
+    isFollowing: false,
+    tags: ['relax', 'ambiental', 'estudio'],
+    collaborative: true,
+    collaborators: ['user2', 'user3'],
+  },
+  {
+    id: '3',
+    name: 'Éxitos del Verano',
+    description: 'Los mejores éxitos para disfrutar este verano',
+    coverUrl: 'https://images.pexels.com/photos/761963/pexels-photo-761963.jpeg?auto=compress&cs=tinysrgb&w=400',
+    userId: '1',
+    songs: [mockSongs[0], mockSongs[2], mockSongs[4], mockSongs[1]],
+    createdAt: '2024-06-01T00:00:00Z',
+    updatedAt: '2024-07-15T14:20:00Z',
+    isPublic: true,
+    totalDuration: mockSongs[0].duration + mockSongs[2].duration + mockSongs[4].duration + mockSongs[1].duration,
+    followersCount: 256,
+    isFollowing: true,
+    tags: ['verano', 'éxitos', 'fiesta'],
+    collaborative: false,
+    collaborators: [],
   },
 ];
 

@@ -45,7 +45,7 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
       return { ...state, currentTime: action.payload };
     case 'SET_VOLUME':
       return { ...state, volume: action.payload };
-    case 'NEXT_SONG':
+    case 'NEXT_SONG': {
       const nextIndex = state.currentIndex < state.queue.length - 1 ? state.currentIndex + 1 : 0;
       return {
         ...state,
@@ -53,7 +53,8 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
         currentSong: state.queue[nextIndex] || null,
         currentTime: 0,
       };
-    case 'PREVIOUS_SONG':
+    }
+    case 'PREVIOUS_SONG': {
       const prevIndex = state.currentIndex > 0 ? state.currentIndex - 1 : state.queue.length - 1;
       return {
         ...state,
@@ -61,7 +62,8 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
         currentSong: state.queue[prevIndex] || null,
         currentTime: 0,
       };
-    case 'SET_QUEUE':
+    }
+    case 'SET_QUEUE': {
       const startIndex = action.payload.startIndex || 0;
       return {
         ...state,
@@ -70,12 +72,13 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
         currentSong: action.payload.songs[startIndex] || null,
         currentTime: 0,
       };
+    }
     case 'ADD_TO_QUEUE':
       return {
         ...state,
         queue: [...state.queue, action.payload],
       };
-    case 'REMOVE_FROM_QUEUE':
+    case 'REMOVE_FROM_QUEUE': {
       const newQueue = state.queue.filter((_, index) => index !== action.payload);
       let newIndex = state.currentIndex;
       if (action.payload < state.currentIndex) {
@@ -89,11 +92,14 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
         currentIndex: Math.max(0, newIndex),
         currentSong: newQueue[Math.max(0, newIndex)] || null,
       };
-    case 'TOGGLE_SHUFFLE':
+    }
+    case 'TOGGLE_SHUFFLE': {
       return { ...state, shuffle: !state.shuffle };
-    case 'TOGGLE_REPEAT':
+    }
+    case 'TOGGLE_REPEAT': {
       const nextRepeat = state.repeat === 'none' ? 'all' : state.repeat === 'all' ? 'one' : 'none';
       return { ...state, repeat: nextRepeat };
+    }
     default:
       return state;
   }
@@ -148,7 +154,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
+  }, [state.currentTime, state.repeat, state.volume]);
 
   useEffect(() => {
     if (audioRef.current && state.currentSong) {

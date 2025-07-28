@@ -4,7 +4,7 @@
 
 StreamFlow Music es una plataforma moderna de streaming de música desarrollada con React, TypeScript y Vite. Ofrece una experiencia de usuario fluida para descubrir, reproducir y gestionar música en línea.
 
-## 🚀 Características Principales
+## Características Principales
 
 - **Reproducción de Música**: Reproduce tus canciones favoritas con controles intuitivos.
 - **Gestión de Playlists**: Crea y gestiona listas de reproducción personalizadas.
@@ -14,7 +14,7 @@ StreamFlow Music es una plataforma moderna de streaming de música desarrollada 
 - **Diseño Responsive**: Interfaz adaptada para diferentes dispositivos.
 - **Temas Oscuro/Claro**: Personaliza tu experiencia visual.
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **Frontend**: 
   - React 18
@@ -35,7 +35,7 @@ StreamFlow Music es una plataforma moderna de streaming de música desarrollada 
   - lucide-react (Iconos)
   - clsx (Manejo de clases condicionales)
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 streamflow-music/
@@ -62,7 +62,7 @@ streamflow-music/
 └── vite.config.ts          # Configuración de Vite
 ```
 
-## 🚀 Cómo Empezar
+## Cómo Empezar
 
 ### Requisitos Previos
 
@@ -104,7 +104,7 @@ streamflow-music/
    http://localhost:5173
    ```
 
-## 📱 Vistas de la Aplicación
+## Vistas de la Aplicación
 
 ### Página de Inicio
 ![Página de Inicio](https://via.placeholder.com/800x500?text=StreamFlow+Home+Page)
@@ -115,7 +115,7 @@ streamflow-music/
 ### Página de Búsqueda
 ![Búsqueda](https://via.placeholder.com/800x500?text=Search+Page)
 
-## 🛠️ Estructura de Componentes
+## Estructura de Componentes
 
 ### Componentes Principales
 
@@ -126,7 +126,7 @@ streamflow-music/
 5. **SongList**: Lista de canciones con opciones de reproducción.
 6. **PlaylistCard**: Tarjeta para mostrar información de playlists.
 
-## 🔄 Estados y Contextos
+## Estados y Contextos
 
 La aplicación utiliza dos contextos principales:
 
@@ -141,7 +141,7 @@ La aplicación utiliza dos contextos principales:
    - Cola de reproducción
    - Volumen y progreso
 
-## 🧪 Pruebas
+## Pruebas
 
 Para ejecutar las pruebas:
 
@@ -151,7 +151,7 @@ npm test
 yarn test
 ```
 
-## 🛠️ Despliegue
+## Despliegue
 
 ### Construir para Producción
 
@@ -178,15 +178,15 @@ yarn build
    vercel --prod
    ```
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más información.
 
-## 👥 Contribución
+## Contribución
 
 Las contribuciones son bienvenidas. Por favor, lee las [pautas de contribución](CONTRIBUTING.md) antes de enviar un pull request.
 
-## 📧 Contacto
+## Contacto
 
 ¿Preguntas o comentarios? Envía un correo a contacto@streamflowmusic.com
 

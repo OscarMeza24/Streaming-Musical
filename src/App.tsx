@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
+interface LocationState {
+  from?: {
+    pathname: string;
+    search?: string;
+    hash?: string;
+    key?: string;
+    state?: unknown;
+  };
+}
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { MusicPlayer } from './components/player/MusicPlayer';
+
+// Páginas
 import { HomePage } from './pages/HomePage';
 import { AuthPage } from './pages/AuthPage';
+import SearchPage from './pages/SearchPage';
+import LibraryPage from './pages/LibraryPage';
+import HistoryPage from './pages/HistoryPage';
+import RecommendationsPage from './pages/RecommendationsPage';
 
-const AppContent: React.FC = () => {
+// Componente para proteger rutas que requieren autenticación
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -28,21 +44,28 @@ const AppContent: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <AuthPage />;
+    // Redirigir a la página de inicio de sesión, guardando la ubicación actual
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage />;
-      case 'search':
-        return <div className="text-white">Página de Búsqueda - Próximamente</div>;
-      case 'library':
-        return <div className="text-white">Página de Biblioteca - Próximamente</div>;
-      default:
-        return <HomePage />;
-    }
-  };
+  return <>{children}</>;
+};
+
+// Componente para redirigir a los usuarios autenticados lejos de las páginas de autenticación
+const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const from = (location.state as LocationState)?.from?.pathname || '/';
+
+  if (isAuthenticated) {
+    return <Navigate to={from} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AppContent: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -51,8 +74,6 @@ const AppContent: React.FC = () => {
         {/* Sidebar */}
         <Sidebar
           isOpen={sidebarOpen}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
         />
 
         {/* Main Content */}
@@ -63,7 +84,56 @@ const AppContent: React.FC = () => {
           {/* Page Content */}
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-32">
             <div className="max-w-screen-2xl mx-auto">
-              {renderPage()}
+              <Routes>
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/search" element={
+                  <ProtectedRoute>
+                    <SearchPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/library" element={
+                  <ProtectedRoute>
+                    <LibraryPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/history" element={
+                  <ProtectedRoute>
+                    <HistoryPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/recommendations" element={
+                  <ProtectedRoute>
+                    <RecommendationsPage />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Authentication Routes */}
+                <Route path="/login" element={
+                  <AuthRedirect>
+                    <AuthPage mode="login" />
+                  </AuthRedirect>
+                } />
+                
+                <Route path="/register" element={
+                  <AuthRedirect>
+                    <AuthPage mode="register" />
+                  </AuthRedirect>
+                } />
+                
+                {/* Catch-all route - redirect to home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+                
+                {/* Redirigir rutas no encontradas a la página de inicio */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </div>
           </main>
         </div>
