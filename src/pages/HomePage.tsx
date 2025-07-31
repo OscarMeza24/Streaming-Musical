@@ -1,18 +1,73 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, TrendingUp, Clock, Heart } from 'lucide-react';
+import { Play, TrendingUp, Clock, Heart, Loader } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { SongCard } from '../components/music/SongCard';
 import { PlaylistCard } from '../components/music/PlaylistCard';
 import { Button } from '../components/common/Button';
-import { mockPlaylists, mockTrendingSongs, mockRecentPlays } from '../data/mockData';
 import { usePlayer } from '../contexts/PlayerContext';
+import { Song, Playlist } from '../types';
+import { getAllSongs } from '../services/songService';
+import { toggleSongLikeStatus } from '../services/libraryService';
+import { mockPlaylists } from '../data/mockData'; // Manteniendo playlists de prueba por ahora
 
 export const HomePage: React.FC = () => {
   const { setQueue } = usePlayer();
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handlePlayTrending = () => {
-    setQueue(mockTrendingSongs, 0);
+  const loadInitialData = async () => {
+    try {
+      setIsLoading(true);
+      const allSongs = await getAllSongs();
+      setSongs(allSongs);
+    } catch (error) {
+      toast.error('No se pudieron cargar las canciones.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const handleToggleLike = (songId: string, isCurrentlyLiked: boolean) => {
+    const originalSongs = [...songs];
+
+    // Optimistic UI update
+    setSongs(prevSongs =>
+      prevSongs.map(s => (s.id === songId ? { ...s, liked: !isCurrentlyLiked } : s))
+    );
+
+    try {
+      const newLikedStatus = toggleSongLikeStatus(songId);
+      if (newLikedStatus) {
+        toast.success('Canción añadida a tus me gusta');
+      } else {
+        toast.success('Canción eliminada de tus me gusta');
+      }
+    } catch (error) {
+      toast.error('No se pudo actualizar la canción.');
+      setSongs(originalSongs); // Revert on error
+    }
+  };
+
+  const handlePlaySongs = (songList: Song[], songIndex: number) => {
+    setQueue(songList, songIndex);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Loader className="w-12 h-12 animate-spin text-purple-500" />
+      </div>
+    );
+  }
+
+  // Dividir canciones para diferentes secciones (simulado)
+  const recentPlays = songs.slice(0, 5);
+  const trendingSongs = songs.slice(5, 11);
 
   return (
     <div className="space-y-8">
@@ -36,7 +91,7 @@ export const HomePage: React.FC = () => {
           <Button
             variant="primary"
             size="lg"
-            onClick={handlePlayTrending}
+            onClick={() => handlePlaySongs(trendingSongs, 0)}
             leftIcon={<Play className="w-5 h-5" />}
           >
             Reproducir Tendencias
@@ -44,15 +99,15 @@ export const HomePage: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Quick Access */}
+      {/* Quick Access - Esto puede ser estático o futuro desarrollo */}
       <section>
         <h2 className="text-2xl font-bold text-white mb-6">Acceso Rápido</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: 'Canciones Favoritas', subtitle: '42 canciones', icon: Heart, color: 'from-red-500 to-pink-500' },
-            { title: 'Reproducidas Recientemente', subtitle: 'Últimos 7 días', icon: Clock, color: 'from-blue-500 to-cyan-500' },
-            { title: 'Tendencias', subtitle: 'Pistas populares', icon: TrendingUp, color: 'from-orange-500 to-red-500' },
-            { title: 'Descubrir', subtitle: 'Nuevos lanzamientos', icon: Play, color: 'from-purple-500 to-blue-500' },
+            { title: 'Canciones Favoritas', icon: Heart, color: 'from-red-500 to-pink-500' },
+            { title: 'Reproducidas Recientemente', icon: Clock, color: 'from-blue-500 to-cyan-500' },
+            { title: 'Tendencias', icon: TrendingUp, color: 'from-orange-500 to-red-500' },
+            { title: 'Descubrir', icon: Play, color: 'from-purple-500 to-blue-500' },
           ].map((item, index) => (
             <motion.div
               key={item.title}
@@ -67,7 +122,6 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{item.title}</h3>
-                  <p className="text-sm text-gray-400">{item.subtitle}</p>
                 </div>
               </div>
             </motion.div>
@@ -82,18 +136,19 @@ export const HomePage: React.FC = () => {
           <Button variant="ghost">Ver Todo</Button>
         </div>
         <div className="space-y-2">
-          {mockRecentPlays.slice(0, 5).map((song, index) => (
+          {recentPlays.map((song, index) => (
             <SongCard
               key={song.id}
               song={song}
               index={index}
               showIndex={true}
+              onToggleLike={handleToggleLike}
             />
           ))}
         </div>
       </section>
 
-      {/* Your Playlists */}
+      {/* Your Playlists (aún con datos de prueba) */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Tus Listas de Reproducción</h2>
@@ -116,12 +171,13 @@ export const HomePage: React.FC = () => {
         <Button variant="ghost">Ver Todo</Button>
         </div>
         <div className="space-y-2">
-          {mockTrendingSongs.slice(0, 6).map((song, index) => (
+          {trendingSongs.map((song, index) => (
             <SongCard
               key={song.id}
               song={song}
               index={index}
               showIndex={true}
+              onToggleLike={handleToggleLike}
             />
           ))}
         </div>

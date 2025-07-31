@@ -11,13 +11,15 @@ interface SongCardProps {
   index?: number;
   showIndex?: boolean;
   className?: string;
+  onToggleLike?: (songId: string, isLiked: boolean) => void;
 }
 
 export const SongCard: React.FC<SongCardProps> = ({ 
   song, 
   index, 
   showIndex = false, 
-  className 
+  className, 
+  onToggleLike
 }) => {
   const { currentSong, isPlaying, play, pause, addToQueue } = usePlayer();
   const isCurrentSong = currentSong?.id === song.id;
@@ -110,6 +112,10 @@ export const SongCard: React.FC<SongCardProps> = ({
           <Button
             variant="ghost"
             size="sm"
+            onClick={(e) => {
+              e.stopPropagation(); // Evita que se active el play de la canción
+              onToggleLike?.(song.id, !!song.liked);
+            }}
             className={`${song.liked ? 'text-red-500' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
           >
             <Heart className={`w-4 h-4 ${song.liked ? 'fill-current' : ''}`} />

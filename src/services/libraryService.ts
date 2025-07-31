@@ -173,7 +173,7 @@ export const getLikedSongs = (): Song[] => {
   return mockSongs.filter(song => song.liked);
 };
 
-export const toggleLikeSong = (songId: string): boolean => {
+export const toggleSongLikeStatus = (songId: string): boolean => {
   const song = mockSongs.find(s => s.id === songId);
   if (song) {
     song.liked = !song.liked;

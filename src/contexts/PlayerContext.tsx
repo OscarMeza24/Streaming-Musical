@@ -46,12 +46,27 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
     case 'SET_VOLUME':
       return { ...state, volume: action.payload };
     case 'NEXT_SONG': {
-      const nextIndex = state.currentIndex < state.queue.length - 1 ? state.currentIndex + 1 : 0;
+      if (state.queue.length === 0) return state;
+      let nextIndex;
+      if (state.shuffle) {
+        nextIndex = Math.floor(Math.random() * state.queue.length);
+      } else {
+        nextIndex = state.currentIndex + 1;
+        if (nextIndex >= state.queue.length) {
+          if (state.repeat === 'all') {
+            nextIndex = 0; // Loop back to the start
+          } else {
+            // Stop playback if not repeating
+            return { ...state, isPlaying: false };
+          }
+        }
+      }
       return {
         ...state,
         currentIndex: nextIndex,
-        currentSong: state.queue[nextIndex] || null,
+        currentSong: state.queue[nextIndex],
         currentTime: 0,
+        isPlaying: true, // Ensure playback continues
       };
     }
     case 'PREVIOUS_SONG': {
@@ -119,66 +134,87 @@ const initialState: PlayerState = {
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(playerReducer, initialState);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Use a ref to hold the latest state for use in event listeners
+  const stateRef = useRef(state);
   useEffect(() => {
-    // Create audio element
-    audioRef.current = new Audio();
-    audioRef.current.volume = state.volume;
-    
-    // Set up event listeners
-    const audio = audioRef.current;
-    
+    stateRef.current = state;
+  }, [state]);
+
+  // Effect to initialize and manage the audio element and its listeners
+  useEffect(() => {
+    const audio = new Audio();
+    audioRef.current = audio;
+
     const handleTimeUpdate = () => {
-      if (audio.currentTime !== state.currentTime) {
+      if (audio && !audio.seeking && !isNaN(audio.currentTime)) {
         dispatch({ type: 'SET_CURRENT_TIME', payload: audio.currentTime });
       }
     };
-    
-    const handleEnded = () => {
-      if (state.repeat === 'one') {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        dispatch({ type: 'NEXT_SONG' });
+
+    const handleLoadedMetadata = () => {
+      if (audio && audio.duration) {
+        // Asegurarse de que tenemos la duración correcta
+        console.log('Duración cargada:', audio.duration);
       }
     };
-    
+
+    const handleEnded = () => {
+      console.log('Canción terminada, modo repetición:', stateRef.current.repeat);
+      
+      if (stateRef.current.repeat === 'one') {
+        // Repetir la misma canción
+        audio.currentTime = 0;
+        audio.play().catch(e => console.error("Error al repetir canción:", e));
+      } else if (stateRef.current.repeat === 'all' || 
+                stateRef.current.currentIndex < stateRef.current.queue.length - 1) {
+        // Pasar a la siguiente canción
+        dispatch({ type: 'NEXT_SONG' });
+      } else {
+        // Detener la reproducción si no hay más canciones y no está en modo repetición
+        dispatch({ type: 'PAUSE' });
+        audio.currentTime = 0;
+      }
+    };
+
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
-    
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    // Forzar una actualización inicial del tiempo
+    const updateInterval = setInterval(handleTimeUpdate, 1000);
+
+    // Cleanup on unmount
     return () => {
+      clearInterval(updateInterval);
+      audio.pause();
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
-  }, [state.currentTime, state.repeat, state.volume]);
+  }, []); // This effect runs only once on mount
 
+  // Effect to handle song changes
   useEffect(() => {
     if (audioRef.current && state.currentSong) {
       audioRef.current.src = state.currentSong.fileUrl;
       if (state.isPlaying) {
-        audioRef.current.play().catch(() => {
-          toast.error('Error al reproducir la canción');
-        });
+        audioRef.current.play().catch(e => console.error("Error playing song:", e));
       }
     }
   }, [state.currentSong]);
 
+  // Effect to handle play/pause state changes
   useEffect(() => {
-    if (audioRef.current) {
-      if (state.isPlaying) {
-        audioRef.current.play().catch(() => {
-          toast.error('Error al reproducir la canción');
-        });
-      } else {
-        audioRef.current.pause();
-      }
+    if (!audioRef.current) return;
+    if (state.isPlaying && state.currentSong) {
+      audioRef.current.play().catch(e => console.error("Error on play command:", e));
+    } else {
+      audioRef.current.pause();
     }
-  }, [state.isPlaying]);
+  }, [state.isPlaying, state.currentSong]);
 
+  // Effect to handle volume changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = state.volume;
@@ -202,7 +238,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const seek = (time: number) => {
-    if (audioRef.current) {
+    if (
+      audioRef.current &&
+      typeof time === 'number' &&
+      isFinite(time) &&
+      !isNaN(time) &&
+      time >= 0 &&
+      (audioRef.current.duration ? time <= audioRef.current.duration : true)
+    ) {
       audioRef.current.currentTime = time;
       dispatch({ type: 'SET_CURRENT_TIME', payload: time });
     }

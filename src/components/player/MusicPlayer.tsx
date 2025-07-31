@@ -39,7 +39,12 @@ export const MusicPlayer: React.FC = () => {
     return null;
   }
 
-  const progress = (currentTime / currentSong.duration) * 100;
+  // Asegurarse de que la duración sea un número válido
+  const songDuration = currentSong.duration || 1; // Evitar división por cero
+  const progress = Math.min(100, Math.max(0, (currentTime / songDuration) * 100));
+  
+  // Debug: Mostrar valores en consola
+  console.log('Tiempo actual:', currentTime, 'Duración:', songDuration, 'Progreso:', progress);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -109,7 +114,7 @@ export const MusicPlayer: React.FC = () => {
               <Button
                 variant="primary"
                 size="lg"
-                onClick={isPlaying ? pause : () => play()}
+                onClick={isPlaying ? () => pause() : () => play()}
                 className="rounded-full w-12 h-12 p-0"
               >
                 {isPlaying ? (
