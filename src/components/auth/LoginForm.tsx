@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
@@ -59,20 +59,33 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           rules={{
             required: 'El correo electrónico es requerido',
             pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Correo electrónico inválido',
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: 'Formato de email inválido',
             },
           }}
           render={({ field }) => (
-            <Input
-              {...field}
-              type="email"
-              name="email"
-              label="Correo Electrónico"
-              placeholder="Ingresa tu correo electrónico"
-              leftIcon={<Mail className="w-4 h-4" />}
-              error={errors.email?.message}
-            />
+            <div className="space-y-1">
+              <Input
+                {...field}
+                type="email"
+                name="email"
+                label="Correo Electrónico"
+                placeholder="ejemplo@correo.com"
+                leftIcon={<Mail className="w-4 h-4" />}
+                error={errors.email?.message}
+                className={errors.email ? 'border-red-500 focus:border-red-500' : ''}
+              />
+              {errors.email && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
+                >
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.email.message}
+                </motion.div>
+              )}
+            </div>
           )}
         />
 
@@ -87,24 +100,38 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             },
           }}
           render={({ field }) => (
-            <Input
-              {...field}
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              label="Contraseña"
-              placeholder="Ingresa tu contraseña"
-              leftIcon={<Lock className="w-4 h-4" />}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-white"
+            <div className="space-y-1">
+              <Input
+                {...field}
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                label="Contraseña"
+                placeholder="Ingresa tu contraseña"
+                leftIcon={<Lock className="w-4 h-4" />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
+                error={errors.password?.message}
+                className={errors.password ? 'border-red-500 focus:border-red-500' : ''}
+              />
+              {errors.password && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
-              error={errors.password?.message}
-            />
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.password.message}
+                </motion.div>
+              )}
+            </div>
           )}
         />
 
