@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Search, Menu, User, LogOut, Settings, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../common/Button';
@@ -11,8 +12,24 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showUserMenu]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   };
 
   return (
-    <header className="h-16 bg-gray-900/50 backdrop-blur-lg border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between">
+    <header className="h-16 bg-gray-900/50 backdrop-blur-lg border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between relative z-50">
       {/* Left section */}
       <div className="flex items-center gap-4">
         <Button
@@ -56,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
       </div>
 
       {/* Right section - User menu */}
-      <div className="relative">
+      <div className="relative z-50" ref={dropdownRef}>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -86,29 +103,52 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         {/* User dropdown menu */}
         {showUserMenu && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 top-full mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-50"
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute right-0 top-full mt-2 w-48 bg-gray-800 rounded-lg shadow-2xl border border-gray-700 py-2 z-[9999]"
+            style={{ zIndex: 9999 }}
           >
-            <button className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3">
+            <button 
+              onClick={() => {
+                navigate('/profile');
+                setShowUserMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
+            >
               <User className="w-4 h-4" />
               Perfil
             </button>
-            <button className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3">
+            <button 
+              onClick={() => {
+                // TODO: Implementar página de configuración
+                setShowUserMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
+            >
               <Settings className="w-4 h-4" />
               Configuración
             </button>
             {user?.subscription?.type === 'free' && (
-              <button className="w-full px-4 py-2 text-left text-sm text-purple-400 hover:text-purple-300 hover:bg-gray-700 flex items-center gap-3">
+              <button 
+                onClick={() => {
+                  // TODO: Implementar actualización a Premium
+                  setShowUserMenu(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-purple-400 hover:text-purple-300 hover:bg-gray-700 flex items-center gap-3 transition-colors"
+              >
                 <Crown className="w-4 h-4" />
                 Actualizar a Premium
               </button>
             )}
             <hr className="my-2 border-gray-700" />
             <button
-              onClick={logout}
-              className="w-full px-4 py-2 text-left text-sm text-red-400 hover:text-red-300 hover:bg-gray-700 flex items-center gap-3"
+              onClick={() => {
+                logout();
+                setShowUserMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-400 hover:text-red-300 hover:bg-gray-700 flex items-center gap-3 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Cerrar Sesión

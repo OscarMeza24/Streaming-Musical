@@ -24,6 +24,7 @@ import SearchPage from './pages/SearchPage';
 import LibraryPage from './pages/LibraryPage';
 import HistoryPage from './pages/HistoryPage';
 import RecommendationsPage from './pages/RecommendationsPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -112,6 +113,12 @@ const AppContent: React.FC = () => {
                 <Route path="/recommendations" element={
                   <ProtectedRoute>
                     <RecommendationsPage />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
                   </ProtectedRoute>
                 } />
                 
