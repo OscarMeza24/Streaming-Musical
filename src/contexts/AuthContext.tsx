@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState } from '../types';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface AuthContextType extends AuthState {
@@ -120,209 +121,242 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    // Verificar sesión almacenada al cargar
-    const token = localStorage.getItem('streamflow_token');
-    const userData = localStorage.getItem('streamflow_user');
-    
-    if (token && userData) {
+    // Verificar sesión activa al cargar
+    const checkSession = async () => {
       try {
-        const user = JSON.parse(userData);
-        // Verificar que el token no haya expirado (simulación)
-        const tokenData = JSON.parse(atob(token.split('.')[1] || '{}'));
-        const isExpired = tokenData.exp && Date.now() >= tokenData.exp * 1000;
-        
-        if (!isExpired) {
-          dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
-        } else {
-          // Token expirado, limpiar
-          localStorage.removeItem('streamflow_token');
-          localStorage.removeItem('streamflow_user');
-          toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const user: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
+            avatar_url: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
+            role: session.user.user_metadata?.role || 'normal',
+            created_at: session.user.created_at || new Date().toISOString(),
+            updated_at: session.user.created_at || new Date().toISOString(),
+          };
+          dispatch({ 
+            type: 'LOGIN_SUCCESS', 
+            payload: { 
+              user, 
+              token: session.access_token 
+            } 
+          });
         }
       } catch (error) {
-        console.error('Error al cargar el usuario:', error);
-        localStorage.removeItem('streamflow_token');
-        localStorage.removeItem('streamflow_user');
+        console.error('Error al verificar la sesión:', error);
       }
-    }
+    };
+
+    checkSession();
+
+    // Escuchar cambios en el estado de autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
+          avatar_url: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
+          role: session.user.user_metadata?.role || 'normal',
+          created_at: session.user.created_at || new Date().toISOString(),
+          updated_at: session.user.created_at || new Date().toISOString(),
+        };
+        dispatch({ 
+          type: 'LOGIN_SUCCESS', 
+          payload: { 
+            user, 
+            token: session.access_token 
+          } 
+        });
+      } else if (event === 'SIGNED_OUT') {
+        dispatch({ type: 'LOGOUT' });
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     dispatch({ type: 'LOGIN_START' });
     
     try {
-      // Validaciones
-      const emailError = validateEmail(email);
-      if (emailError) {
-        throw new Error(emailError);
-      }
-      
-      const passwordError = validatePassword(password);
-      if (passwordError) {
-        throw new Error(passwordError);
-      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Buscar usuario
-      const existingUser = findUserByEmail(email);
-      if (!existingUser) {
-        throw new Error('Usuario no encontrado. ¿Necesitas crear una cuenta?');
-      }
-      
-      if (existingUser.password !== password) {
-        throw new Error('Contraseña incorrecta');
-      }
-      
-      // Crear token JWT simulado con expiración
-      const tokenPayload = {
-        userId: existingUser.id,
-        email: existingUser.email,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
+      if (error) throw error;
+      if (!data.session) throw new Error('No se pudo iniciar sesión');
+
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Usuario',
+        avatar_url: data.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
+        role: data.user.user_metadata?.role || 'normal',
+        created_at: data.user.created_at || new Date().toISOString(),
+        updated_at: data.user.created_at || new Date().toISOString(),
       };
-      const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(tokenPayload))}.signature`;
+
+      dispatch({ 
+        type: 'LOGIN_SUCCESS', 
+        payload: { 
+          user, 
+          token: data.session.access_token 
+        } 
+      });
       
-      localStorage.setItem('streamflow_token', token);
-      localStorage.setItem('streamflow_user', JSON.stringify(existingUser));
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: existingUser, token } });
-      toast.success(`¡Bienvenido de vuelta, ${existingUser.name}!`);
+      toast.success('¡Bienvenido de nuevo!');
     } catch (error: any) {
+      console.error('Error al iniciar sesión:', error);
       dispatch({ type: 'LOGIN_FAILURE' });
-      toast.error(error.message || 'Error de inicio de sesión. Inténtalo de nuevo.');
-      throw error;
+      toast.error(error.message || 'Error al iniciar sesión');
     }
   };
 
   const register = async (email: string, password: string, name: string) => {
     dispatch({ type: 'LOGIN_START' });
     
+    // Mostrar mensaje de carga
+    const loadingToast = toast.loading('Creando tu cuenta...');
+    
     try {
-      // Validaciones
-      const emailError = validateEmail(email);
-      if (emailError) {
-        throw new Error(emailError);
-      }
-      
-      const passwordError = validatePassword(password);
-      if (passwordError) {
-        throw new Error(passwordError);
-      }
-      
-      const nameError = validateName(name);
-      if (nameError) {
-        throw new Error(nameError);
-      }
 
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      
-      // Verificar si el usuario ya existe
-      const existingUser = findUserByEmail(email);
-      if (existingUser) {
-        throw new Error('Ya existe una cuenta con este email');
-      }
-      
-      // Crear nuevo usuario
-      const newUser: User = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      // 1. Crear el usuario en Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
-        name: name.trim(),
         password,
-        createdAt: new Date().toISOString(),
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        subscription: {
-          id: `sub_${Date.now()}`,
-          type: 'free',
-          startDate: new Date().toISOString(),
-          status: 'active',
-          userId: `user_${Date.now()}`,
+        options: {
+          data: {
+            name: name,
+            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-      };
-      
-      // Guardar usuario
-      saveUser(newUser);
-      
-      // Crear token
-      const tokenPayload = {
-        userId: newUser.id,
-        email: newUser.email,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-      };
-      const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(tokenPayload))}.signature`;
-      
-      localStorage.setItem('streamflow_token', token);
-      localStorage.setItem('streamflow_user', JSON.stringify(newUser));
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: newUser, token } });
-      toast.success(`¡Bienvenido a StreamFlow Music, ${newUser.name}!`);
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario');
+
+      // Cerrar el toast de carga
+      toast.dismiss(loadingToast);
+
+      // Mostrar mensaje de verificación de correo
+      toast.success(
+        `Hemos enviado un enlace de verificación a ${email}.\nPor favor revisa tu bandeja de entrada.`,
+        {
+          duration: 30000, // 30 segundos
+          icon: '✉️',
+          style: {
+            padding: '16px',
+            fontSize: '16px',
+            maxWidth: '100%',
+            whiteSpace: 'pre-line',
+            minWidth: '350px',
+            zIndex: 9999 // Asegurar que esté por encima de otros elementos
+          },
+          position: 'top-center' as const
+        }
+      );
+
+      // Redirigir a la página de verificación de correo
+      window.location.href = '/auth/verify-email';
+      return;
     } catch (error: any) {
+      // Cerrar el toast de carga en caso de error
+      toast.dismiss(loadingToast);
+      
+      console.error('Error al registrar:', error);
       dispatch({ type: 'LOGIN_FAILURE' });
-      toast.error(error.message || 'Error en el registro. Inténtalo de nuevo.');
-      throw error;
+      
+      // Mostrar mensaje de error más descriptivo
+      const errorMessage = error.message.includes('already registered')
+        ? 'Este correo ya está registrado. ¿Quieres iniciar sesión?'
+        : 'Error al crear la cuenta. Por favor, inténtalo de nuevo.';
+        
+      toast.error(errorMessage, {
+        duration: 15000, // 15 segundos para mensajes de error
+        style: {
+          padding: '16px',
+          fontSize: '16px',
+          maxWidth: '100%',
+          margin: '0 auto',
+          textAlign: 'center',
+          minWidth: '350px',
+          zIndex: 9999 // Asegurar que esté por encima de otros elementos
+        },
+        position: 'top-center' as const
+      });
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('streamflow_token');
-    localStorage.removeItem('streamflow_user');
-    dispatch({ type: 'LOGOUT' });
-    toast.success('Sesión cerrada exitosamente');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      dispatch({ type: 'LOGOUT' });
+      toast.success('Sesión cerrada correctamente');
+    } catch (error: any) {
+      console.error('Error al cerrar sesión:', error);
+      toast.error(error.message || 'Error al cerrar sesión');
+    }
   };
 
   const updateProfile = async (updates: Partial<User>) => {
     if (!state.user) return;
     
     try {
-      // Validaciones
-      if (updates.name) {
-        const nameError = validateName(updates.name);
-        if (nameError) {
-          throw new Error(nameError);
+      // Actualizar los metadatos del usuario en Auth
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          name: updates.name,
+          avatar_url: updates.avatar_url,
         }
-      }
-      
-      if (updates.email) {
-        const emailError = validateEmail(updates.email);
-        if (emailError) {
-          throw new Error(emailError);
-        }
-        
-        // Verificar que el nuevo email no esté en uso
-        if (updates.email !== state.user.email) {
-          const existingUser = findUserByEmail(updates.email);
-          if (existingUser) {
-            throw new Error('Este email ya está en uso');
-          }
-        }
-      }
+      });
 
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const updatedUser = { ...state.user, ...updates };
-      
-      // Actualizar en el almacenamiento
-      saveUser(updatedUser);
-      localStorage.setItem('streamflow_user', JSON.stringify(updatedUser));
-      
+      if (error) throw error;
+      if (!data.user) throw new Error('No se pudo actualizar el perfil');
+
+      // Actualizar el perfil en la base de datos
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: state.user.id,
+          name: updates.name,
+          avatar_url: updates.avatar_url,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (profileError) throw profileError;
+
+      // Actualizar el estado local
+      const updatedUser = {
+        ...state.user,
+        ...updates,
+      };
+
       dispatch({ type: 'UPDATE_USER', payload: updatedUser });
-      toast.success('Perfil actualizado exitosamente');
+      toast.success('Perfil actualizado correctamente');
     } catch (error: any) {
+      console.error('Error al actualizar el perfil:', error);
       toast.error(error.message || 'Error al actualizar el perfil');
-      throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{
-      ...state,
-      login,
-      register,
-      logout,
-      updateProfile,
-    }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        register,
+        logout,
+        updateProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -331,7 +365,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth debe usarse dentro de un AuthProvider');
   }
   return context;
 };
