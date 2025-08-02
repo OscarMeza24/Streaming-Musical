@@ -27,6 +27,7 @@ import HistoryPage from './pages/HistoryPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SimpleSettingsPage } from './pages/SimpleSettingsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import TrendingPage from './pages/TrendingPage';
 import RecentPage from './pages/RecentPage';
 import DiscoverPage from './pages/DiscoverPage';
@@ -130,6 +131,12 @@ const AppContent: React.FC = () => {
                 <Route path="/settings" element={
                   <ProtectedRoute>
                     <SimpleSettingsPage />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/privacy" element={
+                  <ProtectedRoute>
+                    <PrivacyPage />
                   </ProtectedRoute>
                 } />
 

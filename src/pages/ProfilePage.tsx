@@ -18,14 +18,12 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useSettings } from '../contexts/SettingsContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import toast from 'react-hot-toast';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateProfile } = useAuth();
-  const { settings } = useSettings();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -328,7 +326,7 @@ export const ProfilePage: React.FC = () => {
                 size="sm"
                 fullWidth
                 className="justify-start text-gray-300 hover:text-white"
-                onClick={() => toast.success('¡Próximamente disponible!')}
+                onClick={() => navigate('/privacy')}
               >
                 <Shield className="w-4 h-4 mr-2" />
                 Privacidad
