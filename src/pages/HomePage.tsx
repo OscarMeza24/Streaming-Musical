@@ -8,9 +8,8 @@ import { PlaylistCard } from '../components/music/PlaylistCard';
 import { Button } from '../components/common/Button';
 import { usePlayer } from '../contexts/PlayerContext';
 import { Song, Playlist } from '../types';
-import { getAllSongs } from '../services/songService';
-import { toggleSongLikeStatus } from '../services/libraryService';
-import { mockPlaylists } from '../data/mockData'; // Manteniendo playlists de prueba por ahora
+import { MockMusicService } from '../services/mockMusicService';
+import { mockPlaylists } from '../data/mockData';
 
 export const HomePage: React.FC = () => {
   const { setQueue } = usePlayer();
@@ -20,7 +19,7 @@ export const HomePage: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
-      const allSongs = await getAllSongs();
+      const allSongs = await MockMusicService.getAllSongs();
       setSongs(allSongs);
     } catch (error) {
       toast.error('No se pudieron cargar las canciones.');
@@ -33,7 +32,7 @@ export const HomePage: React.FC = () => {
     loadInitialData();
   }, []);
 
-  const handleToggleLike = (songId: string, isCurrentlyLiked: boolean) => {
+  const handleToggleLike = async (songId: string, isCurrentlyLiked: boolean) => {
     const originalSongs = [...songs];
 
     // Optimistic UI update
@@ -42,11 +41,11 @@ export const HomePage: React.FC = () => {
     );
 
     try {
-      const newLikedStatus = toggleSongLikeStatus(songId);
+      const newLikedStatus = await MockMusicService.toggleLikeSong(songId);
       if (newLikedStatus) {
-        toast.success('Canción añadida a tus me gusta');
+        toast.success('Canción añadida a tus favoritos');
       } else {
-        toast.success('Canción eliminada de tus me gusta');
+        toast.success('Canción eliminada de tus favoritos');
       }
     } catch (error) {
       toast.error('No se pudo actualizar la canción.');

@@ -1,192 +1,372 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Music, Disc, Users, ListMusic, Clock, Heart, Plus, Loader } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, Plus, Play, Trash2, MoreHorizontal, ListMusic, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Song, Album, Artist, Playlist } from '../types';
-import { getLikedSongs, toggleSongLikeStatus } from '../services/libraryService';
+import { Song, Playlist } from '../types';
+import { MockMusicService } from '../services/mockMusicService';
+import { usePlayer } from '../contexts/PlayerContext';
 import { formatDuration } from '../utils/format';
+import { Button } from '../components/common/Button';
 
-// Tipos de pestañas disponibles
-type LibraryTab = 'liked' | 'playlists' | 'albums' | 'artists';
+// Create Playlist Modal Component
+interface CreatePlaylistModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreatePlaylist: (name: string, description: string) => void;
+}
 
-// Componente para mostrar las canciones que te gustan (ahora más simple)
-const LikedSongs: React.FC<{ songs: Song[]; onToggleLike: (songId: string, isLiked: boolean) => void; }> = ({ songs, onToggleLike }) => {
-  const navigate = useNavigate();
+const CreatePlaylistModal: React.FC<CreatePlaylistModalProps> = ({ isOpen, onClose, onCreatePlaylist }) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name.trim()) {
+      onCreatePlaylist(name.trim(), description.trim());
+      setName('');
+      setDescription('');
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold text-white mb-4">Crear nueva playlist</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Nombre</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Mi nueva playlist"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Descripción (opcional)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              rows={3}
+              placeholder="Describe tu playlist..."
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-1"
+            >
+              Crear
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Liked Songs Component
+interface LikedSongsProps {
+  songs: Song[];
+  onToggleLike: (songId: string) => void;
+  onPlaySong: (song: Song) => void;
+}
+
+const LikedSongs: React.FC<LikedSongsProps> = ({ songs, onToggleLike, onPlaySong }) => {
   if (songs.length === 0) {
     return (
-      <div className="text-center py-10">
-        <Heart className="w-12 h-12 mx-auto text-gray-500 mb-4" />
-        <h3 className="text-lg font-medium text-white mb-2">Aún no tienes canciones favoritas</h3>
-        <p className="text-gray-400">Usa el corazón para guardar las canciones que te gusten.</p>
+      <div className="text-center py-12">
+        <Heart className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">Aún no tienes canciones favoritas</h3>
+        <p className="text-gray-400">Usa el corazón para guardar las canciones que te gusten</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        {songs.map((song, index) => (
-          <div 
-            key={song.id}
-            className="flex items-center p-3 hover:bg-gray-700 cursor-pointer group"
-            onClick={() => navigate(`/song/${song.id}`)} // Navegación futura
+      {songs.map((song, index) => (
+        <div
+          key={song.id}
+          className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-800 transition-colors group"
+        >
+          {/* Play Button */}
+          <button
+            onClick={() => onPlaySong(song)}
+            className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:bg-purple-700 transition-all"
           >
-            <div className="w-8 text-center text-gray-400 text-sm mr-3">{index + 1}</div>
-            <img 
-              src={song.coverUrl || '/placeholder.png'} 
-              alt={song.title} 
-              className="w-12 h-12 rounded-md mr-3"
-            />
-            <div className="flex-1 min-w-0">
-              <h4 className="text-white font-medium truncate">{song.title}</h4>
-              <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-            </div>
-            <button 
-              className={`p-2 rounded-full mr-2 text-purple-500`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLike(song.id, song.liked || false);
-              }}
-            >
-              <Heart className={`w-5 h-5 fill-current`} />
-            </button>
-            <div className="text-gray-400 text-sm ml-2 w-16 text-right">
-              {formatDuration(song.duration)}
-            </div>
+            <Play className="w-4 h-4" />
+          </button>
+
+          {/* Index */}
+          <div className="w-6 text-center text-gray-400 text-sm group-hover:opacity-0">
+            {index + 1}
           </div>
-        ))}
-      </div>
+
+          {/* Cover Image */}
+          <img
+            src={song.coverUrl || 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=100'}
+            alt={song.title}
+            className="w-12 h-12 rounded-lg object-cover"
+          />
+
+          {/* Song Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-white font-medium truncate">{song.title}</h3>
+            <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+          </div>
+
+          {/* Duration */}
+          <div className="text-gray-400 text-sm">
+            {formatDuration(song.duration)}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onToggleLike(song.id)}
+              className="text-red-500"
+            >
+              <Heart className="w-4 h-4 fill-current" />
+            </Button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
 
-// Componentes Placeholder para otras secciones (a implementar en el futuro)
-const PlaceholderSection: React.FC<{ title: string; icon: React.ReactNode }> = ({ title, icon }) => (
-  <div className="text-center py-10">
-    <div className="w-12 h-12 mx-auto text-gray-500 mb-4">{icon}</div>
-    <h3 className="text-lg font-medium text-white mb-2">{title} no disponible</h3>
-    <p className="text-gray-400">Esta sección se implementará en el futuro.</p>
-  </div>
-);
+// Playlists Component
+interface PlaylistsProps {
+  playlists: Playlist[];
+  onCreatePlaylist: () => void;
+  onDeletePlaylist: (playlistId: string) => void;
+}
 
-// --- PÁGINA PRINCIPAL DE LA BIBLIOTECA (REFACTORIZADA) ---
+const Playlists: React.FC<PlaylistsProps> = ({ playlists, onCreatePlaylist, onDeletePlaylist }) => {
+  return (
+    <div className="space-y-6">
+      {/* Create Playlist Button */}
+      <Button
+        onClick={onCreatePlaylist}
+        variant="primary"
+        className="flex items-center gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        Crear nueva playlist
+      </Button>
 
+      {/* Playlists Grid */}
+      {playlists.length === 0 ? (
+        <div className="text-center py-12">
+          <ListMusic className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+          <h3 className="text-xl font-semibold text-white mb-2">No tienes playlists</h3>
+          <p className="text-gray-400">Crea tu primera playlist para organizar tu música</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {playlists.map((playlist) => (
+            <div
+              key={playlist.id}
+              className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors group"
+            >
+              <div className="relative">
+                <img
+                  src={playlist.coverUrl || 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=300'}
+                  alt={playlist.name}
+                  className="w-full aspect-square rounded-lg object-cover mb-3"
+                />
+                
+                {/* Delete Button */}
+                <button
+                  onClick={() => onDeletePlaylist(playlist.id)}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <h3 className="text-white font-medium truncate">{playlist.name}</h3>
+              <p className="text-gray-400 text-sm truncate">
+                {playlist.songs.length} canciones
+              </p>
+              {playlist.description && (
+                <p className="text-gray-500 text-xs mt-1 truncate">
+                  {playlist.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main Library Page Component
 const LibraryPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<LibraryTab>('liked');
+  const [activeTab, setActiveTab] = useState<'liked' | 'playlists'>('liked');
   const [likedSongs, setLikedSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  const { play, setQueue } = usePlayer();
 
-  // Cargar datos de la biblioteca al montar el componente
-  const loadLibraryData = useCallback(async () => {
+  // Load library data
+  const loadLibraryData = async () => {
     try {
       setIsLoading(true);
-      const songs = await getLikedSongs();
-      setLikedSongs(songs);
+      const [liked, userPlaylists] = await Promise.all([
+        MockMusicService.getLikedSongs(),
+        MockMusicService.getUserPlaylists()
+      ]);
+      setLikedSongs(liked);
+      setPlaylists(userPlaylists);
     } catch (error) {
-      toast.error('No se pudieron cargar tus canciones favoritas.');
-      console.error(error);
+      console.error('Error loading library data:', error);
+      toast.error('Error al cargar tu biblioteca');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     loadLibraryData();
-  }, [loadLibraryData]);
+  }, []);
 
-  // Función centralizada para manejar los "me gusta"
-  const handleToggleLike = async (songId: string, isCurrentlyLiked: boolean) => {
-    // No debería ser posible dar "me gusta" desde aquí, solo quitarlo.
-    if (!isCurrentlyLiked) return;
-
-    // Actualización optimista de la UI para una respuesta más rápida
-    const previousSongs = likedSongs;
-    setLikedSongs(previousSongs.filter(s => s.id !== songId));
-
+  // Handle like toggle
+  const handleToggleLike = async (songId: string) => {
     try {
-      await toggleSongLikeStatus(songId);
-      toast.success('Canción eliminada de tus me gusta');
-      // Opcional: Recargar datos para consistencia total, aunque el borrado local funciona.
-      // loadLibraryData(); 
+      const newLikedState = await MockMusicService.toggleLikeSong(songId);
+      
+      if (!newLikedState) {
+        // Remove from liked songs
+        setLikedSongs(prev => prev.filter(song => song.id !== songId));
+        toast.success('Eliminada de favoritos');
+      }
     } catch (error) {
-      toast.error('No se pudo eliminar la canción.');
-      // Revertir en caso de error
-      setLikedSongs(previousSongs);
+      toast.error('Error al actualizar favoritos');
     }
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader className="w-8 h-8 animate-spin text-purple-500" />
-        </div>
-      );
+  // Handle play song
+  const handlePlaySong = (song: Song) => {
+    if (activeTab === 'liked') {
+      setQueue(likedSongs, likedSongs.findIndex(s => s.id === song.id));
     }
+    play(song);
+  };
 
-    switch (activeTab) {
-      case 'liked':
-        return <LikedSongs songs={likedSongs} onToggleLike={handleToggleLike} />;
-      case 'playlists':
-        return <PlaceholderSection title="Playlists" icon={<ListMusic />} />;
-      case 'albums':
-        return <PlaceholderSection title="Álbumes" icon={<Disc />} />;
-      case 'artists':
-        return <PlaceholderSection title="Artistas" icon={<Users />} />;
-      default:
-        return null;
+  // Handle create playlist
+  const handleCreatePlaylist = async (name: string, description: string) => {
+    try {
+      const newPlaylist = await MockMusicService.createPlaylist(name, description);
+      setPlaylists(prev => [newPlaylist, ...prev]);
+      toast.success('Playlist creada exitosamente');
+    } catch (error) {
+      toast.error('Error al crear la playlist');
     }
   };
+
+  // Handle delete playlist
+  const handleDeletePlaylist = async (playlistId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta playlist?')) {
+      try {
+        await MockMusicService.deletePlaylist(playlistId);
+        setPlaylists(prev => prev.filter(p => p.id !== playlistId));
+        toast.success('Playlist eliminada');
+      } catch (error) {
+        toast.error('Error al eliminar la playlist');
+      }
+    }
+  };
+
+  const tabs = [
+    { id: 'liked' as const, label: 'Favoritas', icon: Heart },
+    { id: 'playlists' as const, label: 'Playlists', icon: ListMusic },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-3xl font-bold text-white mb-6">Tu Biblioteca</h1>
-      
-      {/* Pestañas de Navegación */}
-      <div className="flex items-center space-x-2 border-b border-gray-700 mb-6">
-        <TabButton 
-          label="Me gusta" 
-          isActive={activeTab === 'liked'} 
-          onClick={() => setActiveTab('liked')} 
-        />
-        <TabButton 
-          label="Playlists" 
-          isActive={activeTab === 'playlists'} 
-          onClick={() => setActiveTab('playlists')} 
-        />
-        <TabButton 
-          label="Álbumes" 
-          isActive={activeTab === 'albums'} 
-          onClick={() => setActiveTab('albums')} 
-        />
-        <TabButton 
-          label="Artistas" 
-          isActive={activeTab === 'artists'} 
-          onClick={() => setActiveTab('artists')} 
-        />
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">Tu biblioteca</h1>
+        <p className="text-gray-400">Tu música favorita y playlists</p>
       </div>
 
-      {/* Contenido dinámico según la pestaña */}
-      <div>
-        {renderContent()}
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-gray-800">
+        {tabs.map((tab) => {
+          const IconComponent = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-purple-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white'
+              }`}
+            >
+              <IconComponent className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Tab Content */}
+      <div>
+        {activeTab === 'liked' && (
+          <LikedSongs
+            songs={likedSongs}
+            onToggleLike={handleToggleLike}
+            onPlaySong={handlePlaySong}
+          />
+        )}
+        
+        {activeTab === 'playlists' && (
+          <Playlists
+            playlists={playlists}
+            onCreatePlaylist={() => setShowCreateModal(true)}
+            onDeletePlaylist={handleDeletePlaylist}
+          />
+        )}
+      </div>
+
+      {/* Create Playlist Modal */}
+      <CreatePlaylistModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreatePlaylist={handleCreatePlaylist}
+      />
     </div>
   );
 };
-
-// Componente auxiliar para las pestañas
-const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void; }> = ({ label, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 
-      ${isActive 
-        ? 'text-white border-b-2 border-purple-500'
-        : 'text-gray-400 hover:text-white'}`
-    }
-  >
-    {label}
-  </button>
-);
 
 export default LibraryPage;

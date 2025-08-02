@@ -41,8 +41,10 @@ export const ProfilePage: React.FC = () => {
         avatar: editData.avatar,
       });
       setIsEditing(false);
+      toast.success('Perfil actualizado exitosamente');
     } catch (error) {
       console.error('Error updating profile:', error);
+      toast.error('Error al actualizar el perfil');
     } finally {
       setIsLoading(false);
     }

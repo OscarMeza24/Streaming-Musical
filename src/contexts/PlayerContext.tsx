@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useRef, useEffect } from 'react';
 import { Song, PlayerState } from '../types';
+import { MockMusicService } from '../services/mockMusicService';
 import toast from 'react-hot-toast';
 
 interface PlayerContextType extends PlayerState {
@@ -221,8 +222,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [state.volume]);
 
-  const play = (song?: Song) => {
+  const play = async (song?: Song) => {
     dispatch({ type: 'PLAY', payload: song });
+    
+    // Add to play history when starting a new song
+    if (song && song !== state.currentSong) {
+      try {
+        await MockMusicService.addToPlayHistory(song.id);
+      } catch (error) {
+        console.warn('Failed to add to play history:', error);
+      }
+    }
   };
 
   const pause = () => {
