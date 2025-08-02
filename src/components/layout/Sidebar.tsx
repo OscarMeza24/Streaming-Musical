@@ -48,11 +48,7 @@ const quickLinks = [
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const location = useLocation();
 
-  const handlePageChange = (event: React.MouseEvent) => {
-    // Prevent default navigation since we're using React Router's Link
-    event.preventDefault();
-    // The actual navigation is handled by the Link component's 'to' prop
-  };
+
   
   // Función para verificar si una ruta está activa
   const isActive = (path: string) => {
@@ -71,7 +67,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       <motion.li key={item.id} whileHover={{ x: 4 }}>
         <Link
           to={item.path}
-          onClick={handlePageChange}
           className={clsx(
             'block w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
             active
@@ -95,7 +90,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       <motion.li key={item.id} whileHover={{ x: 4 }}>
         <Link
           to={item.path}
-          onClick={handlePageChange}
           className={clsx(
             'block w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
             active
