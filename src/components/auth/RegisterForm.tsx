@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
-import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
+import { PasswordStrength } from '../common/PasswordStrength';
 
 interface RegisterFormData {
   name: string;
@@ -64,17 +65,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value: 2,
               message: 'El nombre debe tener al menos 2 caracteres',
             },
+            maxLength: {
+              value: 50,
+              message: 'El nombre no puede exceder 50 caracteres',
+            },
+            pattern: {
+              value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+              message: 'El nombre solo puede contener letras y espacios',
+            },
           }}
           render={({ field }) => (
-            <Input
-              {...field}
-              type="text"
-              name="name"
-              label="Nombre Completo"
-              placeholder="Ingresa tu nombre completo"
-              leftIcon={<User className="w-4 h-4" />}
-              error={errors.name?.message}
-            />
+            <div className="space-y-1">
+              <Input
+                {...field}
+                type="text"
+                name="name"
+                label="Nombre Completo"
+                placeholder="Ingresa tu nombre completo"
+                leftIcon={<User className="w-4 h-4" />}
+                error={errors.name?.message}
+                className={errors.name ? 'border-red-500 focus:border-red-500' : ''}
+              />
+              {errors.name && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
+                >
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.name.message}
+                </motion.div>
+              )}
+            </div>
           )}
         />
 
@@ -84,20 +106,33 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           rules={{
             required: 'El correo electrónico es requerido',
             pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Correo electrónico inválido',
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: 'Formato de email inválido',
             },
           }}
           render={({ field }) => (
-            <Input
-              {...field}
-              type="email"
-              name="email"
-              label="Correo Electrónico"
-              placeholder="Ingresa tu correo electrónico"
-              leftIcon={<Mail className="w-4 h-4" />}
-              error={errors.email?.message}
-            />
+            <div className="space-y-1">
+              <Input
+                {...field}
+                type="email"
+                name="email"
+                label="Correo Electrónico"
+                placeholder="ejemplo@correo.com"
+                leftIcon={<Mail className="w-4 h-4" />}
+                error={errors.email?.message}
+                className={errors.email ? 'border-red-500 focus:border-red-500' : ''}
+              />
+              {errors.email && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
+                >
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.email.message}
+                </motion.div>
+              )}
+            </div>
           )}
         />
 
@@ -107,33 +142,49 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           rules={{
             required: 'La contraseña es requerida',
             minLength: {
-              value: 8,
-              message: 'La contraseña debe tener al menos 8 caracteres',
+              value: 6,
+              message: 'La contraseña debe tener al menos 6 caracteres',
             },
-            pattern: {
-              value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-              message: 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número',
+            validate: {
+              hasLowercase: (value) => /[a-z]/.test(value) || 'Debe contener al menos una letra minúscula',
+              hasUppercase: (value) => /[A-Z]/.test(value) || 'Debe contener al menos una letra mayúscula',
+              hasNumber: (value) => /\d/.test(value) || 'Debe contener al menos un número',
             },
           }}
           render={({ field }) => (
-            <Input
-              {...field}
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              label="Contraseña"
-              placeholder="Crea una contraseña"
-              leftIcon={<Lock className="w-4 h-4" />}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-white"
+            <div className="space-y-1">
+              <Input
+                {...field}
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                label="Contraseña"
+                placeholder="Crea una contraseña segura"
+                leftIcon={<Lock className="w-4 h-4" />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
+                error={errors.password?.message}
+                className={errors.password ? 'border-red-500 focus:border-red-500' : ''}
+              />
+              {errors.password && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
-              error={errors.password?.message}
-            />
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.password.message}
+                </motion.div>
+              )}
+              <PasswordStrength password={field.value || ''} />
+            </div>
           )}
         />
 
@@ -145,24 +196,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             validate: (value) => value === password || 'Las contraseñas no coinciden',
           }}
           render={({ field }) => (
-            <Input
-              {...field}
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              label="Confirmar Contraseña"
-              placeholder="Confirma tu contraseña"
-              leftIcon={<Lock className="w-4 h-4" />}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="text-gray-400 hover:text-white"
+            <div className="space-y-1">
+              <Input
+                {...field}
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                label="Confirmar Contraseña"
+                placeholder="Confirma tu contraseña"
+                leftIcon={<Lock className="w-4 h-4" />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                }
+                error={errors.confirmPassword?.message}
+                className={errors.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}
+              />
+              {errors.confirmPassword && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
-              error={errors.confirmPassword?.message}
-            />
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.confirmPassword.message}
+                </motion.div>
+              )}
+            </div>
           )}
         />
 
@@ -197,7 +262,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 </div>
               </div>
               {errors.terms && (
-                <p className="text-sm text-red-500">{errors.terms.message as string}</p>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center text-red-400 text-sm"
+                >
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.terms.message as string}
+                </motion.div>
               )}
             </div>
           )}
