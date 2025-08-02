@@ -34,7 +34,6 @@ type SettingsSection =
 export const SettingsPage: React.FC = () => {
     const [activeSection, setActiveSection] = useState<SettingsSection>(null);
     const {
-        settings,
         resetSettings,
         exportSettings,
         importSettings,
