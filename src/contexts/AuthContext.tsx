@@ -62,18 +62,83 @@ const initialState: AuthState = {
   isLoading: false,
 };
 
+// Simulación de base de datos de usuarios en localStorage
+const USERS_KEY = 'streamflow_users';
+const getStoredUsers = (): User[] => {
+  try {
+    const users = localStorage.getItem(USERS_KEY);
+    return users ? JSON.parse(users) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveUser = (user: User) => {
+  const users = getStoredUsers();
+  const existingIndex = users.findIndex(u => u.email === user.email);
+  
+  if (existingIndex >= 0) {
+    users[existingIndex] = user;
+  } else {
+    users.push(user);
+  }
+  
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+};
+
+const findUserByEmail = (email: string): User | null => {
+  const users = getStoredUsers();
+  return users.find(u => u.email === email) || null;
+};
+
+// Validaciones mejoradas
+const validateEmail = (email: string): string | null => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) return 'El email es requerido';
+  if (!emailRegex.test(email)) return 'Formato de email inválido';
+  return null;
+};
+
+const validatePassword = (password: string): string | null => {
+  if (!password) return 'La contraseña es requerida';
+  if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+  if (!/(?=.*[a-z])/.test(password)) return 'La contraseña debe contener al menos una letra minúscula';
+  if (!/(?=.*[A-Z])/.test(password)) return 'La contraseña debe contener al menos una letra mayúscula';
+  if (!/(?=.*\d)/.test(password)) return 'La contraseña debe contener al menos un número';
+  return null;
+};
+
+const validateName = (name: string): string | null => {
+  if (!name) return 'El nombre es requerido';
+  if (name.length < 2) return 'El nombre debe tener al menos 2 caracteres';
+  if (name.length > 50) return 'El nombre no puede exceder 50 caracteres';
+  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name)) return 'El nombre solo puede contener letras y espacios';
+  return null;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    // Check for stored token on app load
+    // Verificar sesión almacenada al cargar
     const token = localStorage.getItem('streamflow_token');
     const userData = localStorage.getItem('streamflow_user');
     
     if (token && userData) {
       try {
         const user = JSON.parse(userData);
-        dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
+        // Verificar que el token no haya expirado (simulación)
+        const tokenData = JSON.parse(atob(token.split('.')[1] || '{}'));
+        const isExpired = tokenData.exp && Date.now() >= tokenData.exp * 1000;
+        
+        if (!isExpired) {
+          dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
+        } else {
+          // Token expirado, limpiar
+          localStorage.removeItem('streamflow_token');
+          localStorage.removeItem('streamflow_user');
+          toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        }
       } catch (error) {
         console.error('Error al cargar el usuario:', error);
         localStorage.removeItem('streamflow_token');
@@ -82,41 +147,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (email: string, password:string) => {
+  const login = async (email: string, password: string) => {
     dispatch({ type: 'LOGIN_START' });
     
     try {
-      console.log('Iniciando sesión para:', email);
-      // Simulate API call - in production this would be a real API endpoint
+      // Validaciones
+      const emailError = validateEmail(email);
+      if (emailError) {
+        throw new Error(emailError);
+      }
+      
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        throw new Error(passwordError);
+      }
+
+      // Simular delay de red
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful login
-      const user: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        password: password,
-        createdAt: new Date().toISOString(),
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        subscription: {
-          id: '1',
-          type: 'free',
-          startDate: new Date().toISOString(),
-          status: 'active',
-          userId: '1',
-        },
-      };
+      // Buscar usuario
+      const existingUser = findUserByEmail(email);
+      if (!existingUser) {
+        throw new Error('Usuario no encontrado. ¿Necesitas crear una cuenta?');
+      }
       
-      const token = 'mock-jwt-token-' + Date.now();
+      if (existingUser.password !== password) {
+        throw new Error('Contraseña incorrecta');
+      }
+      
+      // Crear token JWT simulado con expiración
+      const tokenPayload = {
+        userId: existingUser.id,
+        email: existingUser.email,
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
+      };
+      const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(tokenPayload))}.signature`;
       
       localStorage.setItem('streamflow_token', token);
-      localStorage.setItem('streamflow_user', JSON.stringify(user));
+      localStorage.setItem('streamflow_user', JSON.stringify(existingUser));
       
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
-      toast.success('¡Bienvenido a StreamFlow Music!');
-    } catch (error) {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: existingUser, token } });
+      toast.success(`¡Bienvenido de vuelta, ${existingUser.name}!`);
+    } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE' });
-      toast.error('Error de inicio de sesión. Inténtalo de nuevo.');
+      toast.error(error.message || 'Error de inicio de sesión. Inténtalo de nuevo.');
       throw error;
     }
   };
@@ -125,35 +199,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'LOGIN_START' });
     
     try {
-        // Simulate API call
+      // Validaciones
+      const emailError = validateEmail(email);
+      if (emailError) {
+        throw new Error(emailError);
+      }
+      
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        throw new Error(passwordError);
+      }
+      
+      const nameError = validateName(name);
+      if (nameError) {
+        throw new Error(nameError);
+      }
+
+      // Simular delay de red
       await new Promise(resolve => setTimeout(resolve, 1200));
       
-      const user: User = {
-        id: '1',
+      // Verificar si el usuario ya existe
+      const existingUser = findUserByEmail(email);
+      if (existingUser) {
+        throw new Error('Ya existe una cuenta con este email');
+      }
+      
+      // Crear nuevo usuario
+      const newUser: User = {
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         email,
-        name,
-        password : password,
+        name: name.trim(),
+        password,
         createdAt: new Date().toISOString(),
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
         subscription: {
-          id: '1',
+          id: `sub_${Date.now()}`,
           type: 'free',
           startDate: new Date().toISOString(),
           status: 'active',
-          userId: '1',
+          userId: `user_${Date.now()}`,
         },
       };
       
-      const token = 'mock-jwt-token-' + Date.now();
+      // Guardar usuario
+      saveUser(newUser);
+      
+      // Crear token
+      const tokenPayload = {
+        userId: newUser.id,
+        email: newUser.email,
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+      };
+      const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(tokenPayload))}.signature`;
       
       localStorage.setItem('streamflow_token', token);
-      localStorage.setItem('streamflow_user', JSON.stringify(user));
+      localStorage.setItem('streamflow_user', JSON.stringify(newUser));
       
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
-      toast.success('¡Cuenta creada exitosamente!');
-    } catch (error) {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: newUser, token } });
+      toast.success(`¡Bienvenido a StreamFlow Music, ${newUser.name}!`);
+    } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE' });
-      toast.error('Error en el registro. Inténtalo de nuevo.');
+      toast.error(error.message || 'Error en el registro. Inténtalo de nuevo.');
       throw error;
     }
   };
@@ -169,15 +275,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!state.user) return;
     
     try {
-      // Simulate API call
+      // Validaciones
+      if (updates.name) {
+        const nameError = validateName(updates.name);
+        if (nameError) {
+          throw new Error(nameError);
+        }
+      }
+      
+      if (updates.email) {
+        const emailError = validateEmail(updates.email);
+        if (emailError) {
+          throw new Error(emailError);
+        }
+        
+        // Verificar que el nuevo email no esté en uso
+        if (updates.email !== state.user.email) {
+          const existingUser = findUserByEmail(updates.email);
+          if (existingUser) {
+            throw new Error('Este email ya está en uso');
+          }
+        }
+      }
+
+      // Simular delay de red
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const updatedUser = { ...state.user, ...updates };
+      
+      // Actualizar en el almacenamiento
+      saveUser(updatedUser);
       localStorage.setItem('streamflow_user', JSON.stringify(updatedUser));
+      
       dispatch({ type: 'UPDATE_USER', payload: updatedUser });
       toast.success('Perfil actualizado exitosamente');
-    } catch (error) {
-      toast.error('Error al actualizar el perfil');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al actualizar el perfil');
       throw error;
     }
   };
