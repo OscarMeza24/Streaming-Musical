@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
   VolumeX,
   Shuffle,
   Repeat,
@@ -42,7 +42,7 @@ export const MusicPlayer: React.FC = () => {
   // Asegurarse de que la duración sea un número válido
   const songDuration = currentSong.duration || 1; // Evitar división por cero
   const progress = Math.min(100, Math.max(0, (currentTime / songDuration) * 100));
-  
+
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -63,11 +63,11 @@ export const MusicPlayer: React.FC = () => {
     >
       <div className="max-w-screen-2xl mx-auto">
         {/* Progress bar */}
-        <div 
+        <div
           className="w-full h-1 bg-gray-700 rounded-full mb-4 cursor-pointer group"
           onClick={handleProgressClick}
         >
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full relative transition-all duration-150 group-hover:h-1.5"
             style={{ width: `${progress}%` }}
           >
@@ -103,11 +103,11 @@ export const MusicPlayer: React.FC = () => {
               >
                 <Shuffle className="w-4 h-4" />
               </Button>
-              
+
               <Button variant="ghost" size="sm" onClick={previous}>
                 <SkipBack className="w-5 h-5" />
               </Button>
-              
+
               <Button
                 variant="primary"
                 size="lg"
@@ -120,11 +120,11 @@ export const MusicPlayer: React.FC = () => {
                   <Play className="w-5 h-5 ml-0.5" />
                 )}
               </Button>
-              
+
               <Button variant="ghost" size="sm" onClick={next}>
                 <SkipForward className="w-5 h-5" />
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -146,7 +146,7 @@ export const MusicPlayer: React.FC = () => {
             <span className="text-xs text-gray-400 hidden sm:block">
               {formatDuration(currentTime)} / {formatDuration(currentSong.duration)}
             </span>
-            
+
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm">
                 {volume === 0 ? (
@@ -155,7 +155,7 @@ export const MusicPlayer: React.FC = () => {
                   <Volume2 className="w-4 h-4" />
                 )}
               </Button>
-              
+
               <input
                 type="range"
                 min="0"
@@ -166,7 +166,7 @@ export const MusicPlayer: React.FC = () => {
                 className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer hidden sm:block slider"
               />
             </div>
-            
+
             <Button variant="ghost" size="sm">
               <MoreHorizontal className="w-4 h-4" />
             </Button>

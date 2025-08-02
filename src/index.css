@@ -7,29 +7,95 @@
   * {
     @apply border-gray-700;
   }
-  
+
   body {
     @apply bg-gray-900 text-white;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Tema claro */
+  .light {
+    --tw-bg-opacity: 1;
+    background-color: rgb(249 250 251 / var(--tw-bg-opacity));
+    color: rgb(17 24 39);
+  }
+
+  .light * {
+    border-color: rgb(209 213 219);
+  }
+
+  .light .bg-gray-900 {
+    background-color: rgb(249 250 251) !important;
+  }
+
+  .light .bg-gray-800 {
+    background-color: rgb(255 255 255) !important;
+  }
+
+  .light .bg-gray-700 {
+    background-color: rgb(243 244 246) !important;
+  }
+
+  .light .text-white {
+    color: rgb(17 24 39) !important;
+  }
+
+  .light .text-gray-400 {
+    color: rgb(107 114 128) !important;
+  }
+
+  .light .text-gray-300 {
+    color: rgb(75 85 99) !important;
+  }
+
+  .light .border-gray-700 {
+    border-color: rgb(209 213 219) !important;
+  }
+
+  .light .border-gray-800 {
+    border-color: rgb(229 231 235) !important;
   }
 }
 
 @layer components {
   .slider {
-    background: linear-gradient(to right, 
-      theme('colors.purple.500') 0%, 
-      theme('colors.purple.500') var(--value, 0%), 
-      theme('colors.gray.700') var(--value, 0%), 
-      theme('colors.gray.700') 100%
-    );
+    background: linear-gradient(to right,
+        theme('colors.purple.500') 0%,
+        theme('colors.purple.500') var(--value, 0%),
+        theme('colors.gray.700') var(--value, 0%),
+        theme('colors.gray.700') 100%);
   }
-  
+
   .slider::-webkit-slider-thumb {
-    @apply appearance-none w-3 h-3 bg-white rounded-full cursor-pointer;
+    @apply appearance-none w-3 h-3 bg-white rounded-full cursor-pointer shadow-lg;
+    box-shadow: 0 0 0 1px theme('colors.purple.500');
   }
-  
+
+  .slider::-webkit-slider-thumb:hover {
+    @apply scale-110;
+    box-shadow: 0 0 0 2px theme('colors.purple.400');
+  }
+
   .slider::-moz-range-thumb {
-    @apply w-3 h-3 bg-white rounded-full cursor-pointer border-0;
+    @apply w-3 h-3 bg-white rounded-full cursor-pointer border-0 shadow-lg;
+    box-shadow: 0 0 0 1px theme('colors.purple.500');
+  }
+
+  .slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 0 2px theme('colors.purple.400');
+  }
+
+  /* Estilos para checkboxes personalizados */
+  input[type="checkbox"] {
+    @apply appearance-none w-4 h-4 border border-gray-600 rounded bg-gray-700 checked:bg-purple-600 checked:border-purple-500 cursor-pointer relative;
+  }
+
+  input[type="checkbox"]:checked::after {
+    @apply absolute inset-0 flex items-center justify-center;
+    content: '✓';
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
   }
 }
 
@@ -37,11 +103,11 @@
   .animation-delay-2000 {
     animation-delay: 2s;
   }
-  
+
   .animation-delay-4000 {
     animation-delay: 4s;
   }
-  
+
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

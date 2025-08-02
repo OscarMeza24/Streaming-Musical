@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <Link
           to={item.path}
           className={clsx(
-            'block w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
             active
               ? 'bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30'
               : 'text-gray-400 hover:text-white hover:bg-gray-800'
@@ -91,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <Link
           to={item.path}
           className={clsx(
-            'block w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
             active
               ? 'bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30'
               : 'text-gray-400 hover:text-white hover:bg-gray-800'
@@ -148,7 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 <Link
                   to={item.path}
                   className={clsx(
-                    'block w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
+                    'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors',
                     active
                       ? 'bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'

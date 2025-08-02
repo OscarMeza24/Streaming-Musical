@@ -5,9 +5,10 @@ export const mockUser: User = {
   id: '1',
   email: 'oscar@gmail.com',
   name: 'Oscar',
-  password: '123456',
-  createdAt: new Date().toISOString(),
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=oscar@gmail.com',
+  avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=oscar@gmail.com',
+  role: 'normal',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   subscription: {
     id: '1',
     type: 'free',

@@ -13,6 +13,7 @@ interface LocationState {
 }
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PlayerProvider } from './contexts/PlayerContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { MusicPlayer } from './components/player/MusicPlayer';
@@ -25,6 +26,7 @@ import LibraryPage from './pages/LibraryPage';
 import HistoryPage from './pages/HistoryPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { SimpleSettingsPage } from './pages/SimpleSettingsPage';
 import TrendingPage from './pages/TrendingPage';
 import RecentPage from './pages/RecentPage';
 import DiscoverPage from './pages/DiscoverPage';
@@ -94,71 +96,77 @@ const AppContent: React.FC = () => {
                     <HomePage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/search" element={
                   <ProtectedRoute>
                     <SearchPage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/library" element={
                   <ProtectedRoute>
                     <LibraryPage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/history" element={
                   <ProtectedRoute>
                     <HistoryPage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/recommendations" element={
                   <ProtectedRoute>
                     <RecommendationsPage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <ProfilePage />
                   </ProtectedRoute>
                 } />
-                
+
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <SimpleSettingsPage />
+                  </ProtectedRoute>
+                } />
+
                 <Route path="/trending" element={
                   <ProtectedRoute>
                     <TrendingPage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/recent" element={
                   <ProtectedRoute>
                     <RecentPage />
                   </ProtectedRoute>
                 } />
-                
+
                 <Route path="/discover" element={
                   <ProtectedRoute>
                     <DiscoverPage />
                   </ProtectedRoute>
                 } />
-                
+
                 {/* Authentication Routes */}
                 <Route path="/login" element={
                   <AuthRedirect>
                     <AuthPage mode="login" />
                   </AuthRedirect>
                 } />
-                
+
                 <Route path="/register" element={
                   <AuthRedirect>
                     <AuthPage mode="register" />
                   </AuthRedirect>
                 } />
-                
+
                 {/* Catch-all route - redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
-                
+
                 {/* Redirigir rutas no encontradas a la página de inicio */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
@@ -185,26 +193,28 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <PlayerProvider>
-          <AppContent />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#1f2937',
-                color: '#fff',
-                border: '1px solid #374151',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#8b5cf6',
-                  secondary: '#fff',
+        <SettingsProvider>
+          <PlayerProvider>
+            <AppContent />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#1f2937',
+                  color: '#fff',
+                  border: '1px solid #374151',
                 },
-              },
-            }}
-          />
-        </PlayerProvider>
+                success: {
+                  iconTheme: {
+                    primary: '#8b5cf6',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+          </PlayerProvider>
+        </SettingsProvider>
       </AuthProvider>
     </Router>
   );

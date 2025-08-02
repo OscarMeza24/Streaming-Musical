@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Search, Menu, User, LogOut, Settings, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from '../../hooks/useTranslation';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         >
           <Menu className="w-5 h-5" />
         </Button>
-        
+
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">SF</span>
@@ -81,15 +83,15 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors"
         >
           <img
-            src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-            alt={user?.name}
+            src={user?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+            alt={user?.name || 'Usuario'}
             className="w-8 h-8 rounded-full"
           />
           <div className="hidden sm:block text-left">
             <p className="text-sm font-medium text-white">{user?.name}</p>
             <p className="text-xs text-gray-400 flex items-center gap-1">
               {user?.subscription?.type === 'free' ? (
-              'Plan Gratuito'
+                'Plan Gratuito'
               ) : (
                 <>
                   <Crown className="w-3 h-3" />
@@ -110,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             className="absolute right-0 top-full mt-2 w-48 bg-gray-800 rounded-lg shadow-2xl border border-gray-700 py-2 z-[9999]"
             style={{ zIndex: 9999 }}
           >
-            <button 
+            <button
               onClick={() => {
                 navigate('/profile');
                 setShowUserMenu(false);
@@ -118,20 +120,20 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
             >
               <User className="w-4 h-4" />
-              Perfil
+              {t('profile')}
             </button>
-            <button 
+            <button
               onClick={() => {
-                // TODO: Implementar página de configuración
+                navigate('/settings');
                 setShowUserMenu(false);
               }}
               className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-gray-700 flex items-center gap-3 transition-colors"
             >
               <Settings className="w-4 h-4" />
-              Configuración
+              {t('settings')}
             </button>
             {user?.subscription?.type === 'free' && (
-              <button 
+              <button
                 onClick={() => {
                   // TODO: Implementar actualización a Premium
                   setShowUserMenu(false);
@@ -151,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               className="w-full px-4 py-2 text-left text-sm text-red-400 hover:text-red-300 hover:bg-gray-700 flex items-center gap-3 transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              Cerrar Sesión
+              {t('logout')}
             </button>
           </motion.div>
         )}

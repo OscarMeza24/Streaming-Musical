@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Crown, 
-  Edit3, 
-  Save, 
-  X, 
+import { useNavigate } from 'react-router-dom';
+import {
+  User,
+  Mail,
+  Calendar,
+  Crown,
+  Edit3,
+  Save,
+  X,
   Camera,
   Shield,
   Music,
@@ -16,29 +17,32 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import toast from 'react-hot-toast';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateProfile } = useAuth();
+  const { settings } = useSettings();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    avatar: user?.avatar || '',
+    avatar: user?.avatar_url || '',
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       await updateProfile({
         name: editData.name,
         email: editData.email,
-        avatar: editData.avatar,
+        avatar_url: editData.avatar,
       });
       setIsEditing(false);
     } catch (error) {
@@ -52,7 +56,7 @@ export const ProfilePage: React.FC = () => {
     setEditData({
       name: user?.name || '',
       email: user?.email || '',
-      avatar: user?.avatar || '',
+      avatar: user?.avatar_url || '',
     });
     setIsEditing(false);
   };
@@ -129,8 +133,8 @@ export const ProfilePage: React.FC = () => {
             <div className="flex items-center gap-6">
               <div className="relative">
                 <img
-                  src={isEditing ? editData.avatar : user.avatar}
-                  alt={user.name}
+                  src={isEditing ? editData.avatar : user.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                  alt={user.name || 'Usuario'}
                   className="w-20 h-20 rounded-full border-2 border-gray-600"
                 />
                 {isEditing && (
@@ -206,7 +210,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="flex items-center gap-2 p-3 bg-gray-700/50 rounded-lg">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-white">
-                    {new Date(user.createdAt).toLocaleDateString('es-ES', {
+                    {new Date(user.created_at).toLocaleDateString('es-ES', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -238,7 +242,7 @@ export const ProfilePage: React.FC = () => {
                 {user.subscription?.type === 'free' ? 'Plan Gratuito' : 'Premium'}
               </h3>
               <p className="text-gray-300 text-sm mb-4">
-                {user.subscription?.type === 'free' 
+                {user.subscription?.type === 'free'
                   ? 'Disfruta de música con anuncios'
                   : 'Música sin límites y sin anuncios'
                 }
@@ -330,7 +334,7 @@ export const ProfilePage: React.FC = () => {
                 size="sm"
                 fullWidth
                 className="justify-start text-gray-300 hover:text-white"
-                onClick={() => toast.success('¡Próximamente disponible!')}
+                onClick={() => navigate('/settings')}
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Configuración
