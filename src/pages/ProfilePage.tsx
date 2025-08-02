@@ -336,7 +336,7 @@ export const ProfilePage: React.FC = () => {
                 size="sm"
                 fullWidth
                 className="justify-start text-gray-300 hover:text-white"
-                onClick={() => toast.success('¡Próximamente disponible!')}
+                onClick={() => navigate('/music-preferences')}
               >
                 <Music className="w-4 h-4 mr-2" />
                 Preferencias de música

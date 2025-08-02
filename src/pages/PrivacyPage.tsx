@@ -273,8 +273,8 @@ export const PrivacyPage: React.FC = () => {
                                     <div
                                         key={value}
                                         className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${privacySettings.profileVisibility === value
-                                                ? 'border-blue-500 bg-blue-500/10'
-                                                : 'border-gray-600 hover:border-gray-500'
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : 'border-gray-600 hover:border-gray-500'
                                             }`}
                                         onClick={() => updatePrivacySetting('profileVisibility', value as any)}
                                     >

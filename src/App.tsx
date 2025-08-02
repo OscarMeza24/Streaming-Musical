@@ -28,6 +28,7 @@ import RecommendationsPage from './pages/RecommendationsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SimpleSettingsPage } from './pages/SimpleSettingsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { MusicPreferencesPage } from './pages/MusicPreferencesPage';
 import TrendingPage from './pages/TrendingPage';
 import RecentPage from './pages/RecentPage';
 import DiscoverPage from './pages/DiscoverPage';
@@ -137,6 +138,12 @@ const AppContent: React.FC = () => {
                 <Route path="/privacy" element={
                   <ProtectedRoute>
                     <PrivacyPage />
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/music-preferences" element={
+                  <ProtectedRoute>
+                    <MusicPreferencesPage />
                   </ProtectedRoute>
                 } />
 
