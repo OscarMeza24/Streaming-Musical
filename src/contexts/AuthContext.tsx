@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, AuthState } from '../types';
+import { MockAuthService } from '../services/mockAuthService';
 import toast from 'react-hot-toast';
 
 interface AuthContextType extends AuthState {
@@ -121,29 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Verificar sesión almacenada al cargar
-    const token = localStorage.getItem('streamflow_token');
-    const userData = localStorage.getItem('streamflow_user');
+    const user = MockAuthService.getCurrentUser();
+    const token = MockAuthService.getToken();
     
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        // Verificar que el token no haya expirado (simulación)
-        const tokenData = JSON.parse(atob(token.split('.')[1] || '{}'));
-        const isExpired = tokenData.exp && Date.now() >= tokenData.exp * 1000;
-        
-        if (!isExpired) {
-          dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
-        } else {
-          // Token expirado, limpiar
-          localStorage.removeItem('streamflow_token');
-          localStorage.removeItem('streamflow_user');
-          toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-        }
-      } catch (error) {
-        console.error('Error al cargar el usuario:', error);
-        localStorage.removeItem('streamflow_token');
-        localStorage.removeItem('streamflow_user');
-      }
+    if (user && token) {
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
     }
   }, []);
 
@@ -151,43 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'LOGIN_START' });
     
     try {
-      // Validaciones
-      const emailError = validateEmail(email);
-      if (emailError) {
-        throw new Error(emailError);
-      }
-      
-      const passwordError = validatePassword(password);
-      if (passwordError) {
-        throw new Error(passwordError);
-      }
-
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Buscar usuario
-      const existingUser = findUserByEmail(email);
-      if (!existingUser) {
-        throw new Error('Usuario no encontrado. ¿Necesitas crear una cuenta?');
-      }
-      
-      if (existingUser.password !== password) {
-        throw new Error('Contraseña incorrecta');
-      }
-      
-      // Crear token JWT simulado con expiración
-      const tokenPayload = {
-        userId: existingUser.id,
-        email: existingUser.email,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
-      };
-      const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(tokenPayload))}.signature`;
-      
-      localStorage.setItem('streamflow_token', token);
-      localStorage.setItem('streamflow_user', JSON.stringify(existingUser));
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: existingUser, token } });
-      toast.success(`¡Bienvenido de vuelta, ${existingUser.name}!`);
+      const { user, token } = await MockAuthService.login(email, password);
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
+      toast.success(`¡Bienvenido de vuelta, ${user.name}!`);
     } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE' });
       toast.error(error.message || 'Error de inicio de sesión. Inténtalo de nuevo.');
@@ -199,64 +148,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'LOGIN_START' });
     
     try {
-      // Validaciones
-      const emailError = validateEmail(email);
-      if (emailError) {
-        throw new Error(emailError);
-      }
-      
-      const passwordError = validatePassword(password);
-      if (passwordError) {
-        throw new Error(passwordError);
-      }
-      
-      const nameError = validateName(name);
-      if (nameError) {
-        throw new Error(nameError);
-      }
-
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      
-      // Verificar si el usuario ya existe
-      const existingUser = findUserByEmail(email);
-      if (existingUser) {
-        throw new Error('Ya existe una cuenta con este email');
-      }
-      
-      // Crear nuevo usuario
-      const newUser: User = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        email,
-        name: name.trim(),
-        password,
-        createdAt: new Date().toISOString(),
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        subscription: {
-          id: `sub_${Date.now()}`,
-          type: 'free',
-          startDate: new Date().toISOString(),
-          status: 'active',
-          userId: `user_${Date.now()}`,
-        },
-      };
-      
-      // Guardar usuario
-      saveUser(newUser);
-      
-      // Crear token
-      const tokenPayload = {
-        userId: newUser.id,
-        email: newUser.email,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-      };
-      const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(tokenPayload))}.signature`;
-      
-      localStorage.setItem('streamflow_token', token);
-      localStorage.setItem('streamflow_user', JSON.stringify(newUser));
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: newUser, token } });
-      toast.success(`¡Bienvenido a StreamFlow Music, ${newUser.name}!`);
+      const { user, token } = await MockAuthService.register(email, password, name);
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
+      toast.success(`¡Bienvenido a StreamFlow Music, ${user.name}!`);
     } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE' });
       toast.error(error.message || 'Error en el registro. Inténtalo de nuevo.');
@@ -265,8 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('streamflow_token');
-    localStorage.removeItem('streamflow_user');
+    MockAuthService.logout();
     dispatch({ type: 'LOGOUT' });
     toast.success('Sesión cerrada exitosamente');
   };
@@ -275,38 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!state.user) return;
     
     try {
-      // Validaciones
-      if (updates.name) {
-        const nameError = validateName(updates.name);
-        if (nameError) {
-          throw new Error(nameError);
-        }
-      }
-      
-      if (updates.email) {
-        const emailError = validateEmail(updates.email);
-        if (emailError) {
-          throw new Error(emailError);
-        }
-        
-        // Verificar que el nuevo email no esté en uso
-        if (updates.email !== state.user.email) {
-          const existingUser = findUserByEmail(updates.email);
-          if (existingUser) {
-            throw new Error('Este email ya está en uso');
-          }
-        }
-      }
-
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const updatedUser = { ...state.user, ...updates };
-      
-      // Actualizar en el almacenamiento
-      saveUser(updatedUser);
-      localStorage.setItem('streamflow_user', JSON.stringify(updatedUser));
-      
+      const updatedUser = await MockAuthService.updateProfile(updates);
       dispatch({ type: 'UPDATE_USER', payload: updatedUser });
       toast.success('Perfil actualizado exitosamente');
     } catch (error: any) {
