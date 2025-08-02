@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Search, 
-  Library, 
-  Heart, 
-  Music, 
+import {
+  Home,
+  Search,
+  Library,
+  Heart,
+  Music,
   TrendingUp,
   Clock,
   ListMusic,
@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const location = useLocation();
 
 
-  
+
   // Función para verificar si una ruta está activa
   const isActive = (path: string) => {
     if (path === '/') {
@@ -62,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const renderNavLink = (item: MenuItem) => {
     const Icon = item.icon;
     const active = isActive(item.path);
-    
+
     return (
       <motion.li key={item.id} whileHover={{ x: 4 }}>
         <Link
@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const renderLibraryItem = (item: MenuItem) => {
     const Icon = item.icon;
     const active = isActive(item.path);
-    
+
     return (
       <motion.li key={item.id} whileHover={{ x: 4 }}>
         <Link
@@ -142,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           {quickLinks.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
-            
+
             return (
               <motion.li key={item.id} whileHover={{ x: 4 }}>
                 <Link

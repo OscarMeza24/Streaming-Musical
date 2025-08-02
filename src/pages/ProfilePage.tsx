@@ -14,7 +14,8 @@ import {
   Music,
   Heart,
   Clock,
-  Settings
+  Settings,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -72,6 +73,19 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Back Button */}
+      <div className="flex items-center justify-between mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver
+        </Button>
+      </div>
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

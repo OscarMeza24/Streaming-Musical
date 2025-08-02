@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
     Palette,
@@ -13,9 +14,7 @@ import {
 } from 'lucide-react';
 import { useSettings, useThemeSettings } from '../contexts/SettingsContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { Button } from '../components/common/Button';
-
-export const SimpleSettingsPage: React.FC = () => {
+import { Button } from '../components/common/Button'; export const SimpleSettingsPage: React.FC = () => {
     const {
         settings,
         updateSetting,
@@ -25,6 +24,7 @@ export const SimpleSettingsPage: React.FC = () => {
 
     const { theme, language, updateTheme, updateLanguage } = useThemeSettings();
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     const [activeSection, setActiveSection] = useState<string | null>(null);
 
@@ -428,6 +428,18 @@ export const SimpleSettingsPage: React.FC = () => {
     // Vista principal
     return (
         <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center justify-between mb-8">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(-1)}
+                    className="text-gray-400 hover:text-white"
+                >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Volver
+                </Button>
+            </div>
+
             <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-white mb-2">{t('settingsTitle')}</h1>
                 <p className="text-gray-400">Personaliza tu experiencia en StreamFlow</p>
