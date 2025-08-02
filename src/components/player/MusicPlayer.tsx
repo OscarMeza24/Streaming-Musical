@@ -43,9 +43,6 @@ export const MusicPlayer: React.FC = () => {
   const songDuration = currentSong.duration || 1; // Evitar división por cero
   const progress = Math.min(100, Math.max(0, (currentTime / songDuration) * 100));
   
-  // Debug: Mostrar valores en consola
-  console.log('Tiempo actual:', currentTime, 'Duración:', songDuration, 'Progreso:', progress);
-
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;

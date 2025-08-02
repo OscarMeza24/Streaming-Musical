@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Play, TrendingUp, Clock, Heart, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SongCard } from '../components/music/SongCard';
@@ -104,26 +105,30 @@ export const HomePage: React.FC = () => {
         <h2 className="text-2xl font-bold text-white mb-6">Acceso Rápido</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: 'Canciones Favoritas', icon: Heart, color: 'from-red-500 to-pink-500' },
-            { title: 'Reproducidas Recientemente', icon: Clock, color: 'from-blue-500 to-cyan-500' },
-            { title: 'Tendencias', icon: TrendingUp, color: 'from-orange-500 to-red-500' },
-            { title: 'Descubrir', icon: Play, color: 'from-purple-500 to-blue-500' },
+            { title: 'Canciones Favoritas', icon: Heart, color: 'from-red-500 to-pink-500', path: '/library?tab=liked' },
+            { title: 'Reproducidas Recientemente', icon: Clock, color: 'from-blue-500 to-cyan-500', path: '/recent' },
+            { title: 'Tendencias', icon: TrendingUp, color: 'from-orange-500 to-red-500', path: '/trending' },
+            { title: 'Descubrir', icon: Play, color: 'from-purple-500 to-blue-500', path: '/discover' },
           ].map((item, index) => (
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group bg-gray-800/50 rounded-lg p-4 hover:bg-gray-800 cursor-pointer transition-all duration-200"
             >
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <item.icon className="w-6 h-6 text-white" />
+              <Link
+                to={item.path}
+                className="block group bg-gray-800/50 rounded-lg p-4 hover:bg-gray-800 cursor-pointer transition-all duration-200"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <item.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">{item.title}</h3>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white">{item.title}</h3>
-                </div>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>
