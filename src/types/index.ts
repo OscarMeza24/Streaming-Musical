@@ -26,7 +26,7 @@ export interface Song {
   artist: string;
   album?: string;
   genre: string;
-  duration: number; // in seconds
+  duration_seconds: number; // in seconds
   year?: number;
   fileUrl: string;
   coverUrl?: string;
@@ -275,7 +275,7 @@ export interface Subscription {
   type: 'free' | 'monthly' | 'annual';
   startDate: string;
   endDate?: string;
-  status: 'active' | 'cancelled' | 'expired' | 'past_due';
+  status: 'active' | 'cancelled' | 'expired';
   userId: string;
   stripeSubscriptionId?: string;
   planId?: string;

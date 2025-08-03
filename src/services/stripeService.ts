@@ -1,4 +1,4 @@
-import { StripePlan, PaymentIntent, BillingInfo, StripeSubscription } from '../types';
+import { StripePlan, PaymentIntent, BillingInfo, StripeSubscription } from '../types/index';
 
 // Configuración de Stripe (en producción, estas claves vendrían de variables de entorno)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';

@@ -1,62 +1,52 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useUser } from '@supabase/auth-helpers-react';
 import { Music, Disc, Users, ListMusic, Clock, Heart, Plus, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Song, Album, Artist, Playlist } from '../types';
+import { Song, SongWithRelations } from '../types';
 import { getLikedSongs, toggleSongLikeStatus } from '../services/libraryService';
 import { formatDuration } from '../utils/format';
+import { useNavigate } from 'react-router-dom';
+import { SongCard } from '../components/music/SongCard';
 
 // Tipos de pestañas disponibles
 type LibraryTab = 'liked' | 'playlists' | 'albums' | 'artists';
 
-// Componente para mostrar las canciones que te gustan (ahora más simple)
-const LikedSongs: React.FC<{ songs: Song[]; onToggleLike: (songId: string, isLiked: boolean) => void; }> = ({ songs, onToggleLike }) => {
-  const navigate = useNavigate();
+// Función para convertir SongWithRelations a Song
+const mapToSong = (songWithRelations: SongWithRelations): Song => ({
+  ...songWithRelations, // Spread all properties from the original song
+  artist: songWithRelations.artist?.name || songWithRelations.artist || 'Artista desconocido',
+  album: songWithRelations.album?.title || songWithRelations.album || 'Álbum desconocido',
+  coverUrl: songWithRelations.album?.cover_url || songWithRelations.coverUrl || '/default-cover.png',
+  liked: true, // Todas las canciones en esta vista son favoritas
+  addedAt: songWithRelations.addedAt || new Date().toISOString()
+});
 
+// Componente para mostrar las canciones que te gustan
+const LikedSongs: React.FC<{ 
+  songs: SongWithRelations[]; 
+  onToggleLike: (songId: string, isLiked: boolean) => void; 
+}> = ({ songs, onToggleLike }) => {
   if (songs.length === 0) {
     return (
-      <div className="text-center py-10">
-        <Heart className="w-12 h-12 mx-auto text-gray-500 mb-4" />
-        <h3 className="text-lg font-medium text-white mb-2">Aún no tienes canciones favoritas</h3>
+      <div className="text-center py-16">
+        <Heart className="w-16 h-16 mx-auto text-gray-500 mb-4" />
+        <h3 className="text-xl font-medium text-white mb-2">Aún no tienes canciones favoritas</h3>
         <p className="text-gray-400">Usa el corazón para guardar las canciones que te gusten.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        {songs.map((song, index) => (
-          <div 
-            key={song.id}
-            className="flex items-center p-3 hover:bg-gray-700 cursor-pointer group"
-            onClick={() => navigate(`/song/${song.id}`)} // Navegación futura
-          >
-            <div className="w-8 text-center text-gray-400 text-sm mr-3">{index + 1}</div>
-            <img 
-              src={song.coverUrl || '/placeholder.png'} 
-              alt={song.title} 
-              className="w-12 h-12 rounded-md mr-3"
-            />
-            <div className="flex-1 min-w-0">
-              <h4 className="text-white font-medium truncate">{song.title}</h4>
-              <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-            </div>
-            <button 
-              className={`p-2 rounded-full mr-2 text-purple-500`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLike(song.id, song.liked || false);
-              }}
-            >
-              <Heart className={`w-5 h-5 fill-current`} />
-            </button>
-            <div className="text-gray-400 text-sm ml-2 w-16 text-right">
-              {formatDuration(song.duration)}
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-3">
+      {songs.map((song, index) => (
+        <SongCard
+          key={song.id}
+          song={mapToSong(song)}
+          index={index}
+          showIndex={true}
+          onToggleLike={onToggleLike}
+        />
+      ))}
     </div>
   );
 };
@@ -73,23 +63,25 @@ const PlaceholderSection: React.FC<{ title: string; icon: React.ReactNode }> = (
 // --- PÁGINA PRINCIPAL DE LA BIBLIOTECA (REFACTORIZADA) ---
 
 const LibraryPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<LibraryTab>('liked');
-  const [likedSongs, setLikedSongs] = useState<Song[]>([]);
+  const user = useUser();
+  const userId = user?.id;
+
+  const [likedSongs, setLikedSongs] = useState<SongWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Cargar datos de la biblioteca al montar el componente
   const loadLibraryData = useCallback(async () => {
+    if (!userId) return;
     try {
       setIsLoading(true);
-      const songs = await getLikedSongs();
+      const songs = await getLikedSongs(userId); // ✅ Así es correcto
       setLikedSongs(songs);
     } catch (error) {
       toast.error('No se pudieron cargar tus canciones favoritas.');
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     loadLibraryData();
@@ -97,22 +89,20 @@ const LibraryPage: React.FC = () => {
 
   // Función centralizada para manejar los "me gusta"
   const handleToggleLike = async (songId: string, isCurrentlyLiked: boolean) => {
-    // No debería ser posible dar "me gusta" desde aquí, solo quitarlo.
-    if (!isCurrentlyLiked) return;
-
-    // Actualización optimista de la UI para una respuesta más rápida
-    const previousSongs = likedSongs;
-    setLikedSongs(previousSongs.filter(s => s.id !== songId));
-
+    if (!userId) {
+      toast.error('Debes iniciar sesión para dar me gusta.');
+      return;
+    }
+    setIsLoading(true);
     try {
-      await toggleSongLikeStatus(songId);
-      toast.success('Canción eliminada de tus me gusta');
-      // Opcional: Recargar datos para consistencia total, aunque el borrado local funciona.
-      // loadLibraryData(); 
+      await toggleSongLikeStatus(songId, userId);
+      const songs = await getLikedSongs(userId);
+      setLikedSongs(songs);
+      toast.success(isCurrentlyLiked ? 'Canción eliminada de tus me gusta' : 'Canción añadida a tus me gusta');
     } catch (error) {
-      toast.error('No se pudo eliminar la canción.');
-      // Revertir en caso de error
-      setLikedSongs(previousSongs);
+      toast.error('No se pudo actualizar la canción.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,45 +115,36 @@ const LibraryPage: React.FC = () => {
       );
     }
 
-    switch (activeTab) {
-      case 'liked':
-        return <LikedSongs songs={likedSongs} onToggleLike={handleToggleLike} />;
-      case 'playlists':
-        return <PlaceholderSection title="Playlists" icon={<ListMusic />} />;
-      case 'albums':
-        return <PlaceholderSection title="Álbumes" icon={<Disc />} />;
-      case 'artists':
-        return <PlaceholderSection title="Artistas" icon={<Users />} />;
-      default:
-        return null;
-    }
+    return <LikedSongs songs={likedSongs} onToggleLike={handleToggleLike} />;
   };
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-3xl font-bold text-white mb-6">Tu Biblioteca</h1>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-white">Tus canciones favoritas</h1>
+      </div>
       
       {/* Pestañas de Navegación */}
-      <div className="flex items-center space-x-2 border-b border-gray-700 mb-6">
+      <div className="flex items-center space-x-4 border-b border-gray-700 mb-8">
         <TabButton 
-          label="Me gusta" 
-          isActive={activeTab === 'liked'} 
-          onClick={() => setActiveTab('liked')} 
+          label="Canciones" 
+          isActive={true} 
+          onClick={() => {}} 
         />
         <TabButton 
           label="Playlists" 
-          isActive={activeTab === 'playlists'} 
-          onClick={() => setActiveTab('playlists')} 
+          isActive={false} 
+          onClick={() => {}} 
         />
         <TabButton 
           label="Álbumes" 
-          isActive={activeTab === 'albums'} 
-          onClick={() => setActiveTab('albums')} 
+          isActive={false} 
+          onClick={() => {}} 
         />
         <TabButton 
           label="Artistas" 
-          isActive={activeTab === 'artists'} 
-          onClick={() => setActiveTab('artists')} 
+          isActive={false} 
+          onClick={() => {}} 
         />
       </div>
 
@@ -176,16 +157,22 @@ const LibraryPage: React.FC = () => {
 };
 
 // Componente auxiliar para las pestañas
-const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void; }> = ({ label, isActive, onClick }) => (
+const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ 
+  label, 
+  isActive, 
+  onClick 
+}) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 
+    className={`px-4 py-3 text-sm font-medium transition-colors duration-200 relative
       ${isActive 
-        ? 'text-white border-b-2 border-purple-500'
-        : 'text-gray-400 hover:text-white'}`
-    }
+        ? 'text-white' 
+        : 'text-gray-400 hover:text-white'}`}
   >
     {label}
+    {isActive && (
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" />
+    )}
   </button>
 );
 

@@ -193,7 +193,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results }) => {
                   <p className="text-gray-400 text-sm truncate">{song.artist}</p>
                 </div>
                 <div className="text-gray-400 text-sm ml-4">
-                  {formatDuration(song.duration)}
+                  {formatDuration(song.duration_seconds)}
                 </div>
               </div>
             ))}

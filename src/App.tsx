@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { SessionContextProvider } from '@supabase/auth-helpers-react';
 
 interface LocationState {
   from?: {
@@ -33,6 +34,7 @@ import TrendingPage from './pages/TrendingPage';
 import RecentPage from './pages/RecentPage';
 import DiscoverPage from './pages/DiscoverPage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
+import { supabase } from './supabaseClient';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -208,32 +210,34 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <SettingsProvider>
-          <PlayerProvider>
-            <AppContent />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#1f2937',
-                  color: '#fff',
-                  border: '1px solid #374151',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#8b5cf6',
-                    secondary: '#fff',
+    <SessionContextProvider supabaseClient={supabase}>
+      <Router>
+        <AuthProvider>
+          <SettingsProvider>
+            <PlayerProvider>
+              <AppContent />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: '#1f2937',
+                    color: '#fff',
+                    border: '1px solid #374151',
                   },
-                },
-              }}
-            />
-          </PlayerProvider>
-        </SettingsProvider>
-      </AuthProvider>
-    </Router>
+                  success: {
+                    iconTheme: {
+                      primary: '#8b5cf6',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </PlayerProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </Router>
+    </SessionContextProvider>
   );
 }
 
