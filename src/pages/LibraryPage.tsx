@@ -12,14 +12,30 @@ import { SongCard } from '../components/music/SongCard';
 type LibraryTab = 'liked' | 'playlists' | 'albums' | 'artists';
 
 // Función para convertir SongWithRelations a Song
-const mapToSong = (songWithRelations: SongWithRelations): Song => ({
-  ...songWithRelations, // Spread all properties from the original song
-  artist: songWithRelations.artist?.name || songWithRelations.artist || 'Artista desconocido',
-  album: songWithRelations.album?.title || songWithRelations.album || 'Álbum desconocido',
-  coverUrl: songWithRelations.album?.cover_url || songWithRelations.coverUrl || '/default-cover.png',
-  liked: true, // Todas las canciones en esta vista son favoritas
-  addedAt: songWithRelations.addedAt || new Date().toISOString()
-});
+const mapToSong = (songWithRelations: SongWithRelations): Song => {
+  // Create a base song object with all properties from songWithRelations
+  const song: Song = {
+    ...songWithRelations,
+    // Use artistInfo if available, otherwise fall back to the artist string or default
+    artist: typeof songWithRelations.artist === 'string' 
+      ? songWithRelations.artist 
+      : songWithRelations.artistInfo?.name || 'Artista desconocido',
+    // Use albumInfo if available, otherwise fall back to the album string or default
+    album: typeof songWithRelations.album === 'string'
+      ? songWithRelations.album
+      : songWithRelations.albumInfo?.title || 'Álbum desconocido',
+    // Use coverUrl from albumInfo if available, otherwise use the song's coverUrl or default
+    coverUrl: songWithRelations.albumInfo?.coverUrl || 
+             songWithRelations.coverUrl || 
+             '/default-cover.png',
+    // All songs in this view are liked
+    liked: true,
+    // Use the provided addedAt or default to now
+    addedAt: songWithRelations.addedAt || new Date().toISOString()
+  };
+  
+  return song;
+};
 
 // Componente para mostrar las canciones que te gustan
 const LikedSongs: React.FC<{ 

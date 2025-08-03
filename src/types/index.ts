@@ -20,13 +20,22 @@ export interface Subscription {
   userId: string;
 }
 
+export interface SongWithRelations extends Song {
+  // Add any additional fields that should be included when fetching a song with relations
+  albumInfo?: Album;  // Using albumInfo to avoid conflict with Song's album property
+  artistInfo?: Artist;
+  isLiked?: boolean;
+  playCount?: number;
+  addedAt?: string;
+}
+
 export interface Song {
   id: string;
   title: string;
   artist: string;
   album?: string;
   genre: string;
-  duration_seconds: number; // in seconds
+  duration: number; // in seconds
   year?: number;
   fileUrl: string;
   coverUrl?: string;

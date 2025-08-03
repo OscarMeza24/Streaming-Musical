@@ -92,7 +92,7 @@ export const getAllSongs = async (): Promise<Song[]> => {
         title: song.title,
         artist: artist?.name || 'Artista desconocido',
         album: album?.title || 'Álbum desconocido',
-        duration_seconds: song.duration_seconds || 0,
+        duration: song.duration || 0,
         genre: song.genre || 'Desconocido',
         fileUrl: song.song_url || song.fileUrl || '',
         coverUrl: album?.cover_url || '',
