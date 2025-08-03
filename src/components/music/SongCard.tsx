@@ -122,7 +122,7 @@ export const SongCard: React.FC<SongCardProps> = ({
           </Button>
           
           <span className="text-sm text-gray-400 w-12 text-right">
-            {formatDuration(song.duration)}
+            {formatDuration(song.duration_seconds)}
           </span>
           
           <Button

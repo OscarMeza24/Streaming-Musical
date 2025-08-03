@@ -9,11 +9,22 @@ import { Button } from '../components/common/Button';
 import { usePlayer } from '../contexts/PlayerContext';
 import { Song, Playlist } from '../types';
 import { getAllSongs } from '../services/songService';
+import { useUser } from '@supabase/auth-helpers-react';
 import { toggleSongLikeStatus } from '../services/libraryService';
 import { mockPlaylists } from '../data/mockData'; // Manteniendo playlists de prueba por ahora
+import { supabase } from '../supabaseClient';
 
 export const HomePage: React.FC = () => {
+
+  useEffect(() => {
+    supabase.auth.getSession().then(console.log);
+  }, []);
+
+
   const { setQueue } = usePlayer();
+  const user = useUser();
+  const userId = user?.id;
+
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,7 +44,13 @@ export const HomePage: React.FC = () => {
     loadInitialData();
   }, []);
 
-  const handleToggleLike = (songId: string, isCurrentlyLiked: boolean) => {
+  const handleToggleLike = async (songId: string, isCurrentlyLiked: boolean) => {
+    if (!userId) {
+      toast.error('Debes iniciar sesión para dar me gusta.');
+      return;
+    }
+
+    // Actualización optimista de la UI si lo deseas
     const originalSongs = [...songs];
 
     // Optimistic UI update
@@ -42,14 +59,11 @@ export const HomePage: React.FC = () => {
     );
 
     try {
-      const newLikedStatus = toggleSongLikeStatus(songId);
-      if (newLikedStatus) {
-        toast.success('Canción añadida a tus me gusta');
-      } else {
-        toast.success('Canción eliminada de tus me gusta');
-      }
+      const newLikedStatus = await toggleSongLikeStatus(songId, userId);
+      // Actualiza tu estado local si es necesario
+      toast.success(newLikedStatus ? 'Añadido a favoritos' : 'Eliminado de favoritos');
     } catch (error) {
-      toast.error('No se pudo actualizar la canción.');
+      toast.error('No se pudo actualizar el estado de la canción.');
       setSongs(originalSongs); // Revert on error
     }
   };

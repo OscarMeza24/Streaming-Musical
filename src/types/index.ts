@@ -26,7 +26,7 @@ export interface Song {
   artist: string;
   album?: string;
   genre: string;
-  duration: number; // in seconds
+  duration_seconds: number; // in seconds
   year?: number;
   fileUrl: string;
   coverUrl?: string;
@@ -217,3 +217,13 @@ export interface UploadedTrack {
   error?: string;
   metadata?: Partial<Song>;
 }
+
+export type SongWithRelations = Song & {
+  album?: {
+    cover_url?: string;
+    title?: string;
+  };
+  artist?: {
+    name?: string;
+  };
+};
