@@ -217,3 +217,67 @@ export interface UploadedTrack {
   error?: string;
   metadata?: Partial<Song>;
 }
+
+// Stripe Types
+export interface StripeSubscription {
+  id: string;
+  status: 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'trialing' | 'unpaid';
+  current_period_start: number;
+  current_period_end: number;
+  cancel_at_period_end: boolean;
+  plan: StripePlan;
+}
+
+export interface StripePlan {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  interval: 'month' | 'year';
+  features: string[];
+}
+
+export interface PaymentIntent {
+  id: string;
+  amount: number;
+  currency: string;
+  status: 'requires_payment_method' | 'requires_confirmation' | 'requires_action' | 'processing' | 'requires_capture' | 'canceled' | 'succeeded';
+  client_secret: string;
+}
+
+export interface BillingInfo {
+  customerId: string;
+  subscriptionId?: string;
+  plan: StripePlan | null;
+  nextBillingDate?: string;
+  paymentMethod?: {
+    id: string;
+    brand: string;
+    last4: string;
+    expMonth: number;
+    expYear: number;
+  };
+}
+
+// Premium Features
+export interface PremiumFeatures {
+  adFree: boolean;
+  offlineDownload: boolean;
+  highQualityAudio: boolean;
+  unlimitedSkips: boolean;
+  exclusiveContent: boolean;
+  familyPlan: boolean;
+}
+
+// Updated Subscription interface
+export interface Subscription {
+  id: string;
+  type: 'free' | 'monthly' | 'annual';
+  startDate: string;
+  endDate?: string;
+  status: 'active' | 'cancelled' | 'expired' | 'past_due';
+  userId: string;
+  stripeSubscriptionId?: string;
+  planId?: string;
+  features: PremiumFeatures;
+}

@@ -64,45 +64,88 @@ streamflow-music/
 
 ## Cómo Empezar
 
+Esta guía te ayudará a configurar el proyecto, incluyendo la integración con Stripe para las suscripciones.
+
 ### Requisitos Previos
 
 - Node.js (v16 o superior)
 - npm o yarn
-- Cuenta en Supabase (para autenticación y base de datos)
+- Cuenta en [Supabase](https://supabase.com) (para autenticación y base de datos)
+- Cuenta en [Stripe](https://stripe.com) (para la pasarela de pago)
 
-### Instalación
+### Configuración del Proyecto y Stripe
 
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/tu-usuario/streamflow-music.git
-   cd streamflow-music
-   ```
+1.  **Clona el repositorio**:
+    ```bash
+    git clone https://github.com/tu-usuario/streamflow-music.git
+    cd streamflow-music
+    ```
 
-2. Instala las dependencias:
-   ```bash
-   npm install
-   # o
-   yarn
-   ```
+2.  **Crea Productos y Precios en Stripe**:
+    Desde tu terminal y usando la [CLI de Stripe](https://stripe.com/docs/stripe-cli), crea el producto y los planes de precios.
 
-3. Configura las variables de entorno:
-   Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
-   ```env
-   VITE_SUPABASE_URL=tu_url_de_supabase
-   VITE_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
-   ```
+    *   **Producto: StreamFlow Premium**
+        ```bash
+        stripe products create --name="StreamFlow Premium" --description="Acceso completo a StreamFlow Music Premium"
+        ```
+        (Copia el `id` del producto, que empieza con `prod_...`)
 
-4. Inicia el servidor de desarrollo:
-   ```bash
-   npm run dev
-   # o
-   yarn dev
-   ```
+    *   **Precios (Mensual y Anual)**:
+        ```bash
+        # Plan Mensual - $9.99
+        stripe prices create --unit-amount=999 --currency=usd --recurring-interval=month --product=ID_DEL_PRODUCTO
 
-5. Abre tu navegador en:
-   ```
-   http://localhost:5173
-   ```
+        # Plan Anual - $99.99
+        stripe prices create --unit-amount=9999 --currency=usd --recurring-interval=year --product=ID_DEL_PRODUCTO
+        ```
+
+3.  **Configura las Variables de Entorno**:
+    Crea un archivo `.env` en la raíz del proyecto con las siguientes variables. Necesitarás claves de Supabase y de Stripe.
+
+    ```env
+    # Supabase Configuration
+    VITE_SUPABASE_URL=tu_url_de_supabase
+    VITE_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+
+    # Stripe Configuration
+    VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+    VITE_STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+
+    # API Configuration
+    VITE_API_BASE_URL=http://localhost:3001/api
+
+    # Webhook Secret (se obtiene al correr 'stripe listen')
+    STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+    ```
+
+4.  **Instala las Dependencias**:
+    Esto incluye las librerías para el frontend (React) y el backend (Node.js).
+
+    ```bash
+    # Instala todas las dependencias del package.json
+    npm install
+
+    # Asegúrate de que las dependencias de Stripe estén incluidas:
+    # Frontend: @stripe/stripe-js, @stripe/react-stripe-js
+    # Backend: stripe, express, cors, dotenv
+    ```
+
+5.  **Inicia los Servidores**:
+    *   **Backend (Stripe)**: En una terminal, inicia el servidor de pagos.
+        ```bash
+        # Asumiendo que tu backend está en stripe-backend-example.cjs
+        node stripe-backend-example.cjs
+        ```
+    *   **Webhook de Stripe**: En otra terminal, reenvía los eventos de Stripe a tu backend.
+        ```bash
+        stripe listen --forward-to localhost:3001/api/stripe/webhook
+        ```
+    *   **Frontend (React)**: En una tercera terminal, inicia la aplicación de React.
+        ```bash
+        npm run dev
+        ```
+
+6.  **Abre tu navegador en**: `http://localhost:5173`
 
 ## Vistas de la Aplicación
 

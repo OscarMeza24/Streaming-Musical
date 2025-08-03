@@ -32,6 +32,7 @@ import { MusicPreferencesPage } from './pages/MusicPreferencesPage';
 import TrendingPage from './pages/TrendingPage';
 import RecentPage from './pages/RecentPage';
 import DiscoverPage from './pages/DiscoverPage';
+import { SubscriptionPage } from './pages/SubscriptionPage';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -164,6 +165,8 @@ const AppContent: React.FC = () => {
                     <DiscoverPage />
                   </ProtectedRoute>
                 } />
+
+                <Route path="/suscripcion" element={<SubscriptionPage />} />
 
                 {/* Authentication Routes */}
                 <Route path="/login" element={
