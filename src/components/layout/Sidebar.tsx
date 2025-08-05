@@ -11,7 +11,8 @@ import {
   Clock,
   ListMusic,
   History,
-  Sparkles
+  Sparkles,
+  Crown
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -121,6 +122,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <ul className="space-y-1">
           {menuItems.map(renderNavLink)}
         </ul>
+      </div>
+
+      {/* Suscripción */}
+      <div className="px-4 pb-4 border-b border-gray-800">
+        <motion.li whileHover={{ x: 4 }}>
+          <Link
+            to="/suscripcion"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+          >
+            <Crown className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm font-medium">Suscripción</span>
+          </Link>
+        </motion.li>
       </div>
 
       {/* Library Section */}
