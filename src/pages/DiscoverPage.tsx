@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Music, Play, Heart, MoreHorizontal, Shuffle, Radio, Compass } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -79,6 +80,7 @@ const formatDuration = (seconds: number) => {
 
 export const DiscoverPage: React.FC = () => {
   const { play, setQueue } = usePlayer();
+  const navigate = useNavigate();
 
   const handlePlay = (song: any) => {
     const songData = {
@@ -152,7 +154,7 @@ export const DiscoverPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-white">Playlists Destacadas</h2>
           <Button variant="ghost" size="sm">Ver todas</Button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredPlaylists.map((playlist, index) => (
             <motion.div
@@ -220,7 +222,14 @@ export const DiscoverPage: React.FC = () => {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Nuevos Lanzamientos</h2>
-          <Button variant="ghost" size="sm">Ver todos</Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/library')}
+            className="hover:text-blue-400 transition-colors"
+          >
+            Ver todos
+          </Button>
         </div>
 
         <div className="space-y-3">
@@ -262,9 +271,9 @@ export const DiscoverPage: React.FC = () => {
 
               {/* Release Date */}
               <div className="text-gray-400 text-sm">
-                {new Date(song.releaseDate).toLocaleDateString('es-ES', { 
-                  month: 'short', 
-                  day: 'numeric' 
+                {new Date(song.releaseDate).toLocaleDateString('es-ES', {
+                  month: 'short',
+                  day: 'numeric'
                 })}
               </div>
 

@@ -94,6 +94,15 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     }
   };
 
+  const handleViewAllResults = () => {
+    if (searchQuery.trim()) {
+      console.log('Navegando a página de resultados con query:', searchQuery.trim());
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearchResults(false);
+      setSearchQuery('');
+    }
+  };
+
   const handleSongClick = (song: any) => {
     console.log('Reproduciendo canción:', song.title);
 
@@ -260,11 +269,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               {searchQuery.trim() && (
                 <div className="p-3 border-t border-gray-700">
                   <button
-                    onClick={() => {
-                      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-                      setShowSearchResults(false);
-                    }}
-                    className="w-full p-2 text-center text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded"
+                    onClick={handleViewAllResults}
+                    className="w-full p-2 text-center text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded transition-colors"
                   >
                     Ver todos los resultados para "{searchQuery}"
                   </button>

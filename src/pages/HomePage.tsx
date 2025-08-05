@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Play, TrendingUp, Clock, Heart, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SongCard } from '../components/music/SongCard';
@@ -15,6 +15,7 @@ import { mockPlaylists } from '../data/mockData'; // Manteniendo playlists de pr
 import { supabase } from '../supabaseClient';
 
 export const HomePage: React.FC = () => {
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(console.log);
@@ -152,7 +153,13 @@ export const HomePage: React.FC = () => {
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Reproducidas Recientemente</h2>
-          <Button variant="ghost">Ver Todo</Button>
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/recent')}
+            className="hover:text-blue-400 transition-colors"
+          >
+            Ver Todo
+          </Button>
         </div>
         <div className="space-y-2">
           {recentPlays.map((song, index) => (
@@ -171,7 +178,13 @@ export const HomePage: React.FC = () => {
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Tus Listas de Reproducción</h2>
-          <Button variant="ghost">Ver Todo</Button>
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/library')}
+            className="hover:text-blue-400 transition-colors"
+          >
+            Ver Todo
+          </Button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {mockPlaylists.map((playlist) => (
@@ -186,8 +199,14 @@ export const HomePage: React.FC = () => {
       {/* Trending Songs */}
       <section>
         <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">Tendencias de Esta Semana</h2>
-        <Button variant="ghost">Ver Todo</Button>
+          <h2 className="text-2xl font-bold text-white">Tendencias de Esta Semana</h2>
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/trending')}
+            className="hover:text-blue-400 transition-colors"
+          >
+            Ver Todo
+          </Button>
         </div>
         <div className="space-y-2">
           {trendingSongs.map((song, index) => (
