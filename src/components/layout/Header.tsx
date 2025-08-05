@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Menu, User, LogOut, Settings, Crown, Music, Disc, ListMusic, Cog, Play, ArrowLeft, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePlayer } from '../../contexts/PlayerContext';
@@ -19,11 +19,19 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { play, setQueue } = usePlayer();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Páginas donde se debe mostrar el botón de retroceso
+  const showBackButton = location.pathname.includes('/search') || 
+                        location.pathname.includes('/settings') || 
+                        location.pathname.includes('/profile') ||
+                        location.pathname.includes('/subscription') ||
+                        location.pathname.includes('/privacy');
 
   // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
@@ -113,15 +121,18 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     <header className="h-16 bg-gray-900/50 backdrop-blur-lg border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between relative z-50">
       {/* Left section */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.history.back()}
-          className="text-gray-400 hover:text-white transition-colors"
-          title="Volver atrás"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+        {/* Botón de retroceso - solo en páginas específicas */}
+        {showBackButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.history.back()}
+            className="text-gray-400 hover:text-white transition-colors"
+            title="Volver atrás"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        )}
 
         <Button
           variant="ghost"
@@ -140,131 +151,134 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         </div>
       </div>
 
-      {/* Center section - Global Search */}
-      <div className="flex-1 max-w-xl mx-4 relative" ref={searchRef}>
-        <form onSubmit={handleSearch} className="relative">
-          <Input
-            type="text"
-            placeholder="Buscar música, páginas, ajustes..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setShowSearchResults(true);
-            }}
-            onFocus={() => setShowSearchResults(true)}
-            leftIcon={<Search className="w-4 h-4" />}
-            className="bg-gray-800/50 border-gray-700/50 pr-10"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setShowSearchResults(false);
+      {/* Center section - Global Search (solo para usuarios autenticados) */}
+      {user && (
+        <div className="flex-1 max-w-xl mx-4 relative" ref={searchRef}>
+          <form onSubmit={handleSearch} className="relative">
+            <Input
+              type="text"
+              placeholder="Buscar música, páginas, ajustes..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearchResults(true);
               }}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-700"
-              title="Limpiar búsqueda"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </form>
-
-        {/* Resultados de búsqueda global */}
-        {showSearchResults && searchQuery.trim() && hasResults && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 max-h-96 overflow-y-auto z-50">
-
-            {/* Header de resultados con botón cerrar */}
-            <div className="flex items-center justify-between p-3 border-b border-gray-700">
-              <h3 className="text-white font-medium">
-                Resultados de búsqueda para "{searchQuery}"
-              </h3>
+              onFocus={() => setShowSearchResults(true)}
+              leftIcon={<Search className="w-4 h-4" />}
+              className="bg-gray-800/50 border-gray-700/50 pr-10"
+            />
+            {searchQuery && (
               <button
-                onClick={() => setShowSearchResults(false)}
-                className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-700"
-                title="Cerrar resultados"
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setShowSearchResults(false);
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-700"
+                title="Limpiar búsqueda"
               >
                 <X className="w-4 h-4" />
               </button>
-            </div>
-
-            {/* Canciones */}
-            {searchResults.songs.length > 0 && (
-              <div className="p-3 border-b border-gray-700">
-                <h3 className="text-white font-medium mb-2 flex items-center">
-                  <Music className="w-4 h-4 mr-2" />
-                  Canciones
-                </h3>
-                {searchResults.songs.map((song) => (
-                  <button
-                    key={song.id}
-                    onClick={() => handleSongClick(song)}
-                    className="w-full flex items-center p-2 hover:bg-gray-700 rounded text-left group transition-all hover:scale-[1.02]"
-                  >
-                    <div className="relative">
-                      <img
-                        src={song.coverUrl}
-                        alt={song.title}
-                        className="w-10 h-10 rounded mr-3"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play className="w-4 h-4 text-white fill-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate group-hover:text-green-400 transition-colors">{song.title}</p>
-                      <p className="text-gray-400 text-sm truncate">{song.artist}</p>
-                    </div>
-                    <div className="text-gray-500 text-sm">{formatDuration(song.duration)}</div>
-                  </button>
-                ))}
-              </div>
             )}
+          </form>
 
-            {/* Páginas/Secciones */}
-            {searchResults.pages.length > 0 && (
-              <div className="p-3">
-                <h3 className="text-white font-medium mb-2 flex items-center">
-                  <Cog className="w-4 h-4 mr-2" />
-                  Páginas y Ajustes
+          {/* Resultados de búsqueda global */}
+          {showSearchResults && searchQuery.trim() && hasResults && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 max-h-96 overflow-y-auto z-50">
+              
+              {/* Header de resultados con botón cerrar */}
+              <div className="flex items-center justify-between p-3 border-b border-gray-700">
+                <h3 className="text-white font-medium">
+                  Resultados de búsqueda para "{searchQuery}"
                 </h3>
-                {searchResults.pages.map((page, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handlePageClick(page)}
-                    className="w-full flex items-center p-2 hover:bg-gray-700 rounded text-left"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
-                      <span className="text-sm">{page.icon}</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium">{page.name}</p>
-                      <p className="text-gray-400 text-sm">{page.description}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Ver todos los resultados */}
-            {searchQuery.trim() && (
-              <div className="p-3 border-t border-gray-700">
                 <button
-                  onClick={() => {
-                    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-                    setShowSearchResults(false);
-                  }}
-                  className="w-full p-2 text-center text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded"
+                  onClick={() => setShowSearchResults(false)}
+                  className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-700"
+                  title="Cerrar resultados"
                 >
-                  Ver todos los resultados para "{searchQuery}"
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Right section - User menu */}
+              {/* Canciones */}
+              {searchResults.songs.length > 0 && (
+                <div className="p-3 border-b border-gray-700">
+                  <h3 className="text-white font-medium mb-2 flex items-center">
+                    <Music className="w-4 h-4 mr-2" />
+                    Canciones
+                  </h3>
+                  {searchResults.songs.map((song) => (
+                    <button
+                      key={song.id}
+                      onClick={() => handleSongClick(song)}
+                      className="w-full flex items-center p-2 hover:bg-gray-700 rounded text-left group transition-all hover:scale-[1.02]"
+                    >
+                      <div className="relative">
+                        <img
+                          src={song.coverUrl}
+                          alt={song.title}
+                          className="w-10 h-10 rounded mr-3"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="w-4 h-4 text-white fill-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate group-hover:text-green-400 transition-colors">{song.title}</p>
+                        <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                      </div>
+                      <div className="text-gray-500 text-sm">{formatDuration(song.duration)}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Páginas/Secciones */}
+              {searchResults.pages.length > 0 && (
+                <div className="p-3">
+                  <h3 className="text-white font-medium mb-2 flex items-center">
+                    <Cog className="w-4 h-4 mr-2" />
+                    Páginas y Ajustes
+                  </h3>
+                  {searchResults.pages.map((page, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handlePageClick(page)}
+                      className="w-full flex items-center p-2 hover:bg-gray-700 rounded text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                        <span className="text-sm">{page.icon}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white font-medium">{page.name}</p>
+                        <p className="text-gray-400 text-sm">{page.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Ver todos los resultados */}
+              {searchQuery.trim() && (
+                <div className="p-3 border-t border-gray-700">
+                  <button
+                    onClick={() => {
+                      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                      setShowSearchResults(false);
+                    }}
+                    className="w-full p-2 text-center text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded"
+                  >
+                    Ver todos los resultados para "{searchQuery}"
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Espacio en blanco cuando no hay usuario autenticado */}
+      {!user && <div className="flex-1" />}      {/* Right section - User menu */}
       <div className="relative z-50" ref={dropdownRef}>
         <motion.button
           whileHover={{ scale: 1.05 }}
