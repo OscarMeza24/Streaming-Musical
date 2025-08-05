@@ -20,13 +20,17 @@ export interface Subscription {
   userId: string;
 }
 
-export interface SongWithRelations extends Song {
+export interface SongWithRelations extends Omit<Song, 'fileUrl' | 'coverUrl'> {
   // Add any additional fields that should be included when fetching a song with relations
   albumInfo?: Album;  // Using albumInfo to avoid conflict with Song's album property
   artistInfo?: Artist;
   isLiked?: boolean;
   playCount?: number;
   addedAt?: string;
+  file_url?: string; // Campo proveniente de Supabase
+  fileUrl?: string; // Mantener compatibilidad con el campo existente
+  cover_url?: string; // Campo proveniente de Supabase
+  coverUrl?: string; // Mantener compatibilidad con el campo existente
 }
 
 export interface Song {
@@ -143,7 +147,8 @@ export interface Album {
   title: string;
   artist: string;
   artistId: string;
-  coverUrl: string;
+  coverUrl?: string;  // Formato estándar
+  cover_url?: string; // Formato de Supabase
   releaseDate: string;
   genre: string;
   trackCount: number;

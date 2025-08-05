@@ -4,6 +4,7 @@ import { Music, ListMusic, RefreshCw, Sparkles } from 'lucide-react';
 import { Song, Album, Playlist } from '../types';
 import { getRecommendations } from '../services/libraryService';
 import { formatDuration } from '../utils/format';
+import { useAuth } from '../contexts/AuthContext';
 
 // Componente para mostrar las canciones recomendadas
 const RecommendedSongs: React.FC<{ songs: Song[] }> = ({ songs }) => {
@@ -161,6 +162,7 @@ const MoodRecommendations: React.FC<{ onMoodSelect: (mood: string) => void }> = 
 
 // Página principal de recomendaciones
 const RecommendationsPage: React.FC = () => {
+  const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<{
     songs: Song[];
     albums: Album[];
@@ -174,9 +176,11 @@ const RecommendationsPage: React.FC = () => {
   // Cargar recomendaciones iniciales
   useEffect(() => {
     const loadRecommendations = async () => {
+      if (!user?.id) return; // No cargar si no hay usuario
+      
       try {
         setIsLoading(true);
-        const data = await getRecommendations();
+        const data = await getRecommendations(user.id);
         setRecommendations(data);
       } catch (error) {
         console.error('Error al cargar recomendaciones:', error);

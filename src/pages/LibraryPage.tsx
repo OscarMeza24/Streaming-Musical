@@ -12,29 +12,50 @@ import { SongCard } from '../components/music/SongCard';
 type LibraryTab = 'liked' | 'playlists' | 'albums' | 'artists';
 
 // Función para convertir SongWithRelations a Song
-const mapToSong = (songWithRelations: SongWithRelations): Song => {
-  // Create a base song object with all properties from songWithRelations
-  const song: Song = {
+const mapToSong = (songWithRelations: any): Song => {
+  // Extraer datos del álbum y artista
+  const album = songWithRelations.album || songWithRelations.albumInfo || {};
+  const artistInfo = songWithRelations.artistInfo || {};
+  
+  // Obtener la URL del archivo de audio
+  const fileUrl = songWithRelations.file_url || songWithRelations.fileUrl || '';
+  
+  // Obtener la URL de la portada (priorizando album.cover_url)
+  const coverUrl = album.cover_url || 
+                  songWithRelations.cover_url || 
+                  album.coverUrl || 
+                  songWithRelations.coverUrl || 
+                  '/default-cover.png';
+  
+  // Obtener el nombre del artista
+  const artistName = typeof songWithRelations.artist === 'string' 
+    ? songWithRelations.artist 
+    : artistInfo.name || 'Artista desconocido';
+  
+  // Obtener el título del álbum
+  const albumTitle = typeof songWithRelations.album === 'string'
+    ? songWithRelations.album
+    : album.title || 'Álbum desconocido';
+  
+  // Asegurar que la duración sea un número
+  const duration = typeof songWithRelations.duration === 'number' 
+    ? songWithRelations.duration 
+    : 0;
+  
+  // Crear el objeto canción
+  return {
     ...songWithRelations,
-    // Use artistInfo if available, otherwise fall back to the artist string or default
-    artist: typeof songWithRelations.artist === 'string' 
-      ? songWithRelations.artist 
-      : songWithRelations.artistInfo?.name || 'Artista desconocido',
-    // Use albumInfo if available, otherwise fall back to the album string or default
-    album: typeof songWithRelations.album === 'string'
-      ? songWithRelations.album
-      : songWithRelations.albumInfo?.title || 'Álbum desconocido',
-    // Use coverUrl from albumInfo if available, otherwise use the song's coverUrl or default
-    coverUrl: songWithRelations.albumInfo?.coverUrl || 
-             songWithRelations.coverUrl || 
-             '/default-cover.png',
-    // All songs in this view are liked
+    id: songWithRelations.id,
+    title: songWithRelations.title,
+    artist: artistName,
+    album: albumTitle,
+    genre: songWithRelations.genre || 'Desconocido',
+    duration: duration,
+    fileUrl: fileUrl,
+    coverUrl: coverUrl,
     liked: true,
-    // Use the provided addedAt or default to now
     addedAt: songWithRelations.addedAt || new Date().toISOString()
   };
-  
-  return song;
 };
 
 // Componente para mostrar las canciones que te gustan
