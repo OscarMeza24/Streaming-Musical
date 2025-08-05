@@ -27,11 +27,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Páginas donde se debe mostrar el botón de retroceso
-  const showBackButton = location.pathname.includes('/search') || 
-                        location.pathname.includes('/settings') || 
-                        location.pathname.includes('/profile') ||
-                        location.pathname.includes('/subscription') ||
-                        location.pathname.includes('/privacy');
+  const showBackButton = location.pathname.includes('/search') ||
+    location.pathname.includes('/settings') ||
+    location.pathname.includes('/profile') ||
+    location.pathname.includes('/subscription') ||
+    location.pathname.includes('/privacy');
 
   // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           {/* Resultados de búsqueda global */}
           {showSearchResults && searchQuery.trim() && hasResults && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 max-h-96 overflow-y-auto z-50">
-              
+
               {/* Header de resultados con botón cerrar */}
               <div className="flex items-center justify-between p-3 border-b border-gray-700">
                 <h3 className="text-white font-medium">
