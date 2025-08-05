@@ -28,8 +28,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
   // Páginas donde se debe mostrar el botón de retroceso
   const showBackButton = location.pathname !== '/' && // No mostrar en página principal
-                        location.pathname !== '/auth' && // No mostrar en login/registro
-                        user; // Solo mostrar si el usuario está autenticado
+    location.pathname !== '/auth' && // No mostrar en login/registro
+    user; // Solo mostrar si el usuario está autenticado
 
   // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
