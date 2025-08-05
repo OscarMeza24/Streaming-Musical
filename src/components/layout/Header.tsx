@@ -301,13 +301,13 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           <div className="hidden sm:block text-left">
             <p className="text-sm font-medium text-white">{user?.name}</p>
             <p className="text-xs text-gray-400 flex items-center gap-1">
-              {user?.subscription?.type === 'free' ? (
-                'Plan Gratuito'
-              ) : (
+              {user?.subscription?.type !== 'free' && user?.subscription?.status === 'active' ? (
                 <>
                   <Crown className="w-3 h-3" />
                   Premium
                 </>
+              ) : (
+                'Plan Gratuito'
               )}
             </p>
           </div>
