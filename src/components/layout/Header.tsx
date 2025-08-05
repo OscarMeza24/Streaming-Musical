@@ -141,14 +141,17 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           </Button>
         )}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onMenuToggle}
-          className="lg:hidden"
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
+        {/* Botón de menú hamburguesa - solo se muestra cuando el usuario está autenticado y no en páginas de login/register */}
+        {user && location.pathname !== '/login' && location.pathname !== '/register' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuToggle}
+            className="lg:hidden"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
 
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
