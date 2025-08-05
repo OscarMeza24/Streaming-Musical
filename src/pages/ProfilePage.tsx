@@ -251,12 +251,12 @@ export const ProfilePage: React.FC = () => {
                 )}
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">
-                {user.subscription?.type === 'free' ? 'Plan Gratuito' : 'Premium'}
+                {user.subscription?.type !== 'free' && user.subscription?.status === 'active' ? 'Premium' : 'Plan Gratuito'}
               </h3>
               <p className="text-gray-300 text-sm mb-4">
-                {user.subscription?.type === 'free'
-                  ? 'Disfruta de música con anuncios'
-                  : 'Música sin límites y sin anuncios'
+                {user.subscription?.type !== 'free' && user.subscription?.status === 'active'
+                  ? 'Música sin límites y sin anuncios'
+                  : 'Disfruta de música con anuncios'
                 }
               </p>
               {user.subscription?.type === 'free' && (
