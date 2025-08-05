@@ -77,15 +77,24 @@ const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 const AppContent: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  // No mostrar el Sidebar en las páginas de autenticación
+  const showSidebar = isAuthenticated && 
+    location.pathname !== '/login' && 
+    location.pathname !== '/register';
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Layout Container */}
       <div className="flex h-screen">
-        {/* Sidebar */}
-        <Sidebar
-          isOpen={sidebarOpen}
-        />
+        {/* Sidebar - solo se muestra cuando el usuario está autenticado y no en páginas de login/register */}
+        {showSidebar && (
+          <Sidebar
+            isOpen={sidebarOpen}
+          />
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
