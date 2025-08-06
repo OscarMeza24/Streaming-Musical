@@ -403,8 +403,8 @@ export const DiscoverPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={`bg-gray-800/50 rounded-lg p-4 border transition-all duration-300 cursor-pointer group hover:bg-gray-700/50 ${currentStation?.id === station.id
-                    ? 'border-purple-500 bg-purple-600/20'
-                    : 'border-gray-700 hover:border-purple-500/50'
+                  ? 'border-purple-500 bg-purple-600/20'
+                  : 'border-gray-700 hover:border-purple-500/50'
                   }`}
                 onClick={() => playStation(station)}
               >
@@ -632,41 +632,6 @@ export const DiscoverPage: React.FC = () => {
                 <span>{playlist.songCount} canciones</span>
                 <span>•</span>
                 <span>{playlist.duration}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Genres */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h2 className="text-2xl font-bold text-white mb-6">Explorar por Género</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {genres.map((genre, index) => (
-            <motion.div
-              key={genre.name}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 * index }}
-              className={`bg-gradient-to-br ${genre.color} rounded-xl p-4 cursor-pointer hover:scale-105 transition-all duration-300 group`}
-              onClick={() => {
-                selectGenre(genre.name);
-                setShowGenres(true);
-              }}
-            >
-              <div className="text-white font-bold text-lg mb-1">{genre.name}</div>
-              <div className="text-white/80 text-sm mb-2">
-                {getGenreCount(genre.name)} canción{getGenreCount(genre.name) !== 1 ? 'es' : ''}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/70 text-xs">Click para explorar</span>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="w-4 h-4 text-white" />
-                </div>
               </div>
             </motion.div>
           ))}

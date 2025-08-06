@@ -21,7 +21,7 @@ import clsx from 'clsx';
 
 export const MusicPlayer: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState(false);
-  
+
   const {
     currentSong,
     isPlaying,
@@ -81,9 +81,9 @@ export const MusicPlayer: React.FC = () => {
 
           <motion.div
             initial={false}
-            animate={{ 
+            animate={{
               height: isMinimized ? 0 : 'auto',
-              opacity: isMinimized ? 0 : 1 
+              opacity: isMinimized ? 0 : 1
             }}
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
