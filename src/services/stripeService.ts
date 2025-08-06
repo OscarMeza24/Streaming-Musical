@@ -3,10 +3,28 @@ import { StripePlan, PaymentIntent, BillingInfo, StripeSubscription } from '../t
 // Configuración de Stripe (en producción, estas claves vendrían de variables de entorno)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
+// Función para manejar errores de la API
+const handleApiError = async (response: Response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+  }
+  return response;
+};
+
+// Función para obtener headers de autenticación
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('streamflow_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
 // Planes disponibles
 export const STRIPE_PLANS: StripePlan[] = [
   {
-    id: 'price_monthly_basic',
+    id: 'price_1RsxCORzTe8ZK2n6eLxJ2PLW',
     name: 'Básico',
     price: 499, // $4.99 en centavos
     currency: 'usd',
@@ -20,7 +38,7 @@ export const STRIPE_PLANS: StripePlan[] = [
     ]
   },
   {
-    id: 'price_monthly_premium',
+    id: 'price_1RsxCORzTe8ZK2n6Dt4U3fGT',
     name: 'Premium',
     price: 999, // $9.99 en centavos
     currency: 'usd',
@@ -36,7 +54,7 @@ export const STRIPE_PLANS: StripePlan[] = [
     ]
   },
   {
-    id: 'price_annual_basic',
+    id: 'price_1RsxCPRzTe8ZK2n6wVelurvi',
     name: 'Básico Anual',
     price: 4999, // $49.99 en centavos (2 meses gratis)
     currency: 'usd',
@@ -51,7 +69,7 @@ export const STRIPE_PLANS: StripePlan[] = [
     ]
   },
   {
-    id: 'price_annual_premium',
+    id: 'price_1RsxCQRzTe8ZK2n6qNCmoFzs',
     name: 'Premium Anual',
     price: 9999, // $99.99 en centavos (2 meses gratis)
     currency: 'usd',
@@ -69,7 +87,7 @@ export const STRIPE_PLANS: StripePlan[] = [
     ]
   },
   {
-    id: 'price_family_premium',
+    id: 'price_1RsxCQRzTe8ZK2n6M4lRNReN',
     name: 'Premium Familiar',
     price: 1499, // $14.99 en centavos
     currency: 'usd',
@@ -95,8 +113,7 @@ export const createPaymentIntent = async (
     const response = await fetch(`${API_BASE_URL}/stripe/create-payment-intent`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         planId,
@@ -104,10 +121,7 @@ export const createPaymentIntent = async (
       })
     });
 
-    if (!response.ok) {
-      throw new Error('Error al crear el payment intent');
-    }
-
+    await handleApiError(response);
     return await response.json();
   } catch (error) {
     console.error('Error creating payment intent:', error);
@@ -118,25 +132,23 @@ export const createPaymentIntent = async (
 // Función para crear una suscripción
 export const createSubscription = async (
   planId: string,
-  paymentMethodId: string
+  paymentMethodId: string,
+  email: string
 ): Promise<StripeSubscription> => {
   try {
     const response = await fetch(`${API_BASE_URL}/stripe/create-subscription`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         planId,
-        paymentMethodId
+        paymentMethodId,
+        email
       })
     });
 
-    if (!response.ok) {
-      throw new Error('Error al crear la suscripción');
-    }
-
+    await handleApiError(response);
     return await response.json();
   } catch (error) {
     console.error('Error creating subscription:', error);
@@ -148,15 +160,10 @@ export const createSubscription = async (
 export const getBillingInfo = async (): Promise<BillingInfo> => {
   try {
     const response = await fetch(`${API_BASE_URL}/stripe/billing-info`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
-      }
+      headers: getAuthHeaders()
     });
 
-    if (!response.ok) {
-      throw new Error('Error al obtener información de facturación');
-    }
-
+    await handleApiError(response);
     return await response.json();
   } catch (error) {
     console.error('Error getting billing info:', error);
@@ -169,16 +176,11 @@ export const cancelSubscription = async (subscriptionId: string): Promise<void> 
   try {
     const response = await fetch(`${API_BASE_URL}/stripe/cancel-subscription`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ subscriptionId })
     });
 
-    if (!response.ok) {
-      throw new Error('Error al cancelar la suscripción');
-    }
+    await handleApiError(response);
   } catch (error) {
     console.error('Error canceling subscription:', error);
     throw error;
@@ -190,16 +192,11 @@ export const reactivateSubscription = async (subscriptionId: string): Promise<vo
   try {
     const response = await fetch(`${API_BASE_URL}/stripe/reactivate-subscription`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ subscriptionId })
     });
 
-    if (!response.ok) {
-      throw new Error('Error al reactivar la suscripción');
-    }
+    await handleApiError(response);
   } catch (error) {
     console.error('Error reactivating subscription:', error);
     throw error;
@@ -214,19 +211,14 @@ export const updatePaymentMethod = async (
   try {
     const response = await fetch(`${API_BASE_URL}/stripe/update-payment-method`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         subscriptionId,
         paymentMethodId
       })
     });
 
-    if (!response.ok) {
-      throw new Error('Error al actualizar el método de pago');
-    }
+    await handleApiError(response);
   } catch (error) {
     console.error('Error updating payment method:', error);
     throw error;
@@ -237,15 +229,10 @@ export const updatePaymentMethod = async (
 export const getBillingHistory = async (): Promise<any[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/stripe/billing-history`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('streamflow_token')}`
-      }
+      headers: getAuthHeaders()
     });
 
-    if (!response.ok) {
-      throw new Error('Error al obtener el historial de facturación');
-    }
-
+    await handleApiError(response);
     return await response.json();
   } catch (error) {
     console.error('Error getting billing history:', error);
@@ -295,4 +282,5 @@ export const mockStripeOperations = {
       }
     };
   }
-}; 
+};
+
