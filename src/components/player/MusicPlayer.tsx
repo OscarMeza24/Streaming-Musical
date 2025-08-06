@@ -106,7 +106,7 @@ export const MusicPlayer: React.FC = () => {
                 {/* Song info */}
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   <img
-                    src={currentSong.coverUrl || 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                    src={currentSong.coverUrl || 'https://picsum.photos/100/100?random=default1'}
                     alt={currentSong.title}
                     className="w-14 h-14 rounded-lg object-cover"
                   />
@@ -213,7 +213,7 @@ export const MusicPlayer: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={currentSong.coverUrl || 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                    src={currentSong.coverUrl || 'https://picsum.photos/100/100?random=default2'}
                     alt={currentSong.title}
                     className="w-10 h-10 rounded-lg object-cover"
                   />
