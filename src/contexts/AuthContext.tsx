@@ -77,13 +77,13 @@ const getStoredUsers = (): User[] => {
 const saveUser = (user: User) => {
   const users = getStoredUsers();
   const existingIndex = users.findIndex(u => u.email === user.email);
-  
+
   if (existingIndex >= 0) {
     users[existingIndex] = user;
   } else {
     users.push(user);
   }
-  
+
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 
@@ -135,12 +135,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             created_at: session.user.created_at || new Date().toISOString(),
             updated_at: session.user.created_at || new Date().toISOString(),
           };
-          dispatch({ 
-            type: 'LOGIN_SUCCESS', 
-            payload: { 
-              user, 
-              token: session.access_token 
-            } 
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: {
+              user,
+              token: session.access_token
+            }
           });
         }
       } catch (error) {
@@ -162,12 +162,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           created_at: session.user.created_at || new Date().toISOString(),
           updated_at: session.user.created_at || new Date().toISOString(),
         };
-        dispatch({ 
-          type: 'LOGIN_SUCCESS', 
-          payload: { 
-            user, 
-            token: session.access_token 
-          } 
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user,
+            token: session.access_token
+          }
         });
       } else if (event === 'SIGNED_OUT') {
         dispatch({ type: 'LOGOUT' });
@@ -181,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     dispatch({ type: 'LOGIN_START' });
-    
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -201,14 +201,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updated_at: data.user.created_at || new Date().toISOString(),
       };
 
-      dispatch({ 
-        type: 'LOGIN_SUCCESS', 
-        payload: { 
-          user, 
-          token: data.session.access_token 
-        } 
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: {
+          user,
+          token: data.session.access_token
+        }
       });
-      
+
       toast.success('¡Bienvenido de nuevo!');
     } catch (error: any) {
       console.error('Error al iniciar sesión:', error);
@@ -219,10 +219,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (email: string, password: string, name: string) => {
     dispatch({ type: 'LOGIN_START' });
-    
+
     // Mostrar mensaje de carga
     const loadingToast = toast.loading('Creando tu cuenta...');
-    
+
     try {
 
       // 1. Crear el usuario en Auth
@@ -268,15 +268,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       // Cerrar el toast de carga en caso de error
       toast.dismiss(loadingToast);
-      
+
       console.error('Error al registrar:', error);
       dispatch({ type: 'LOGIN_FAILURE' });
-      
+
       // Mostrar mensaje de error más descriptivo
       const errorMessage = error.message.includes('already registered')
         ? 'Este correo ya está registrado. ¿Quieres iniciar sesión?'
         : 'Error al crear la cuenta. Por favor, inténtalo de nuevo.';
-        
+
       toast.error(errorMessage, {
         duration: 15000, // 15 segundos para mensajes de error
         style: {
@@ -297,10 +297,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       // Disparar evento personalizado para detener la música
       window.dispatchEvent(new CustomEvent('userLogout'));
-      
+
       dispatch({ type: 'LOGOUT' });
       toast.success('Sesión cerrada correctamente');
     } catch (error: any) {
@@ -311,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (updates: Partial<User>) => {
     if (!state.user) return;
-    
+
     try {
       // Actualizar los metadatos del usuario en Auth
       const { data, error } = await supabase.auth.updateUser({

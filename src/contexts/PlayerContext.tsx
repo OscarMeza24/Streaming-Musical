@@ -172,13 +172,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const handleEnded = () => {
       console.log('Canción terminada, modo repetición:', stateRef.current.repeat);
-      
+
       if (stateRef.current.repeat === 'one') {
         // Repetir la misma canción
         audio.currentTime = 0;
         audio.play().catch(e => console.error("Error al repetir canción:", e));
-      } else if (stateRef.current.repeat === 'all' || 
-                stateRef.current.currentIndex < stateRef.current.queue.length - 1) {
+      } else if (stateRef.current.repeat === 'all' ||
+        stateRef.current.currentIndex < stateRef.current.queue.length - 1) {
         // Pasar a la siguiente canción
         dispatch({ type: 'NEXT_SONG' });
       } else {

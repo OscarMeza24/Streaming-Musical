@@ -81,12 +81,12 @@ const AppContent: React.FC = () => {
   const location = useLocation();
 
   // No mostrar el Sidebar en las páginas de autenticación
-  const showSidebar = isAuthenticated && 
-    location.pathname !== '/login' && 
+  const showSidebar = isAuthenticated &&
+    location.pathname !== '/login' &&
     location.pathname !== '/register';
 
   // No mostrar el Header en las páginas de autenticación
-  const showHeader = location.pathname !== '/login' && 
+  const showHeader = location.pathname !== '/login' &&
     location.pathname !== '/register';
 
   return (
