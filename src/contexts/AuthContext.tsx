@@ -298,6 +298,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Disparar evento personalizado para detener la música
+      window.dispatchEvent(new CustomEvent('userLogout'));
+      
       dispatch({ type: 'LOGOUT' });
       toast.success('Sesión cerrada correctamente');
     } catch (error: any) {

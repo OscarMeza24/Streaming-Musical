@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 interface PlayerContextType extends PlayerState {
   play: (song?: Song) => void;
   pause: () => void;
+  stop: () => void;
   next: () => void;
   previous: () => void;
   seek: (time: number) => void;
@@ -21,6 +22,7 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 type PlayerAction =
   | { type: 'PLAY'; payload?: Song }
   | { type: 'PAUSE' }
+  | { type: 'STOP' }
   | { type: 'SET_CURRENT_TIME'; payload: number }
   | { type: 'SET_VOLUME'; payload: number }
   | { type: 'NEXT_SONG' }
@@ -41,6 +43,15 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
       };
     case 'PAUSE':
       return { ...state, isPlaying: false };
+    case 'STOP':
+      return {
+        ...state,
+        isPlaying: false,
+        currentSong: null,
+        currentTime: 0,
+        queue: [],
+        currentIndex: 0,
+      };
     case 'SET_CURRENT_TIME':
       return { ...state, currentTime: action.payload };
     case 'SET_VOLUME':
@@ -184,6 +195,16 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Forzar una actualización inicial del tiempo
     const updateInterval = setInterval(handleTimeUpdate, 1000);
 
+    // Escuchar evento de logout para detener la música
+    const handleLogout = () => {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = '';
+      dispatch({ type: 'STOP' });
+    };
+
+    window.addEventListener('userLogout', handleLogout);
+
     // Cleanup on unmount
     return () => {
       clearInterval(updateInterval);
@@ -191,6 +212,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      window.removeEventListener('userLogout', handleLogout);
     };
   }, []); // This effect runs only once on mount
 
@@ -227,6 +249,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const pause = () => {
     dispatch({ type: 'PAUSE' });
+  };
+
+  const stop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = '';
+    }
+    dispatch({ type: 'STOP' });
   };
 
   const next = () => {
@@ -281,6 +312,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...state,
       play,
       pause,
+      stop,
       next,
       previous,
       seek,

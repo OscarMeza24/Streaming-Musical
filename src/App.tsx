@@ -85,6 +85,10 @@ const AppContent: React.FC = () => {
     location.pathname !== '/login' && 
     location.pathname !== '/register';
 
+  // No mostrar el Header en las páginas de autenticación
+  const showHeader = location.pathname !== '/login' && 
+    location.pathname !== '/register';
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Layout Container */}
@@ -98,12 +102,12 @@ const AppContent: React.FC = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+          {/* Header - solo se muestra cuando no estamos en páginas de login/register */}
+          {showHeader && <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />}
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-32">
-            <div className="max-w-screen-2xl mx-auto">
+          <main className={`flex-1 overflow-y-auto ${showHeader ? 'p-4 lg:p-6 pb-32' : 'p-0'}`}>
+            <div className={showHeader ? "max-w-screen-2xl mx-auto" : "h-full"}>
               <Routes>
                 <Route path="/" element={
                   <ProtectedRoute>
@@ -194,17 +198,14 @@ const AppContent: React.FC = () => {
 
                 {/* Catch-all route - redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
-
-                {/* Redirigir rutas no encontradas a la página de inicio */}
-                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
           </main>
         </div>
       </div>
 
-      {/* Music Player */}
-      <MusicPlayer />
+      {/* Music Player - solo se muestra cuando el usuario está autenticado */}
+      {isAuthenticated && <MusicPlayer />}
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
